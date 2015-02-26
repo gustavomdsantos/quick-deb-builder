@@ -1,44 +1,5 @@
 #! /bin/bash
 
-function main()
-{
-	DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) # Pega o diretório no qual o script está localizado (default: "/usr/bin")
-	cd "$DIR"/../share/quick-deb-builder
-	EXECUTE_INSTALLATION_SCRIPT_AS_ROOT=$(sudoCommandGenerator "./quick-deb-builder.sh"); # Gera a String do comando para a execução do script (questões de portabilidade)
-	false; # comando só para o RETURN CODE ser != 0 e entrar no loop "REPEAT-UNTIL"
-	until [ "$?" == "0" ] || [ "$?" == "255" ] # RETURN CODES possíveis: 0 = Senha correta e Instalação concluída com êxito; 255 = gksudo falhou (botão "Cancelar" pressionado); 1 = gksudo falhou (senha incorreta); 25 = falha na instalação (específico do instalador)
-	do
-		$EXECUTE_INSTALLATION_SCRIPT_AS_ROOT; # Executa o aplicativo como "root"
-		echo $?; #verifyInstalationStatus_GUI;
-	done
-}
-
-function sudoCommandGenerator()
-{
-	if which gksudo > /dev/null # GTK+ frontend for sudo (normalmente presente nas distribuições com a interface GNOME e derivadas)
-	then # Solicita senha usando gksudo 
-		local command="gksudo bash $1";
-	elif false #which kdesudo > /dev/null # Graphical frontend to the sudo (normalmente presente nas distribuições com a interface KDE)
-	then # Solicita senha usando kdesudo 
-		local command="kdesudo bash $1";
-	else # Solicita senha usando mecanismo próprio (yad + sudo)
-		local command="yadsudo bash $1";
-	fi
-	echo $command; # neste caso, equivale a "return command;" em C/C++
-}
-
-function yadsudo() # "yad SuDo" a clone from "gksu" made in Bash with "yad" as frontend (Usage: yadsudo [command])
-{
-	if [ "$USER" != "root" ]
-	then
-		yad --center --entry --entry-label="Senha:" --hide-text  --image=keys --text="<big><b>Digite sua senha para fazer tarefas administrativas</b></big>\n\nO aplicativo \"$*\" permite que você modifique partes essenciais do seu sistema." --width=360 --height=300 --undecorated --on-top --borders=5 --button=Cancel:255 --button=OK:0 | sudo -p "" -S $*;
-		if [ "$PIPESTATUS" == "255" ] # Se o usuário apertou o botão "Cancel"
-		then
-			return 255; # retorno da função inteira
-		fi
-	else
-		$*;
-	fi
-}
-
-main;
+DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) # Pega o diretório no qual o script está localizado (default: "/usr/bin")
+cd "$DIR"/../share/quick-deb-builder
+sudo ./quick-deb-builder.sh # Como a pasta sudoers.d está modificada, o sudo não irá perguntar senha

@@ -1,0 +1,4 @@
+# Allow any user to build DEB packages with use of chown root without
+# requiring user authentication.
+
+ALL ALL = NOPASSWD:/usr/share/quick-deb-builder/quick-deb-builder.sh
