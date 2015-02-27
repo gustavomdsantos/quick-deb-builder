@@ -1,0 +1,11 @@
+Package: quick-deb-builder
+Version: 0.1.0
+Section: devel
+Maintainer: Gustavo Moraes <gustavosotnas1@gmail.com>
+Homepage: https://github.com/gustavosotnas/quick-deb-builder
+Priority: optional
+Architecture: all
+Depends: yad
+Description: Quick DEB Builder
+ Quick DEB Builder is a simple tool that quickly creates .deb packages from an existing build tree.
+

@@ -6,7 +6,7 @@
 
 APP_NAME="Quick DEB Builder"
 VERSION="0.1.0"
-HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly create .deb packages from an existing build tree."
+HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree."
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 
 displayAboutDialog()

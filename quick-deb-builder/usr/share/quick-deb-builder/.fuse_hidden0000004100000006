@@ -2,7 +2,7 @@
 
 APP_NAME="Quick DEB Builder"
 VERSION="0.1.0"
-HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree."
+HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly create .deb packages from an existing build tree."
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 true=1; false=0; # boolean
 
@@ -12,7 +12,7 @@ main()
 
 	define_deb_IO_folder_paths;
 
-	create_deb_package;
+	#create_deb_package;
 }
 
 verify_GUI()
@@ -89,17 +89,12 @@ create_deb_package()
 	non_executable_files=($(echo "$non_executable_files_tmp"));
 	IFS=$old_IFS;
 
-	echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
-	echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis
-	chmod -R 0755 DEBIAN/ || chmod -R 0755 debian/; # Dá permissões rwxr-xr-x para pasta debian
+	echo "${executable_files[*]}" | xargs chmod 755 # Dá permissões rwxr-xr-x para todos os arquivos executáveis
+	echo "${non_executable_files[*]}" | xargs chmod 644 # Dá permissões rw-r--r-- para todos os arquivos não-executáveis
+	chmod 0755 DEBIAN/ || chmod 0755 debian/; # Dá permissões rwxr-xr-x para pasta debian
 
-	if find /tmp/deb-packing/etc/sudoers.d/ # se existe a pasta /etc/sudoers.d no pacote
-	then
-		chmod -R /tmp/deb-packing/etc/sudoers.d/ 0440;
-	fi
-
-	chown -R root: /tmp/deb-packing; # sudo Não vai pedir senha por causa do "sudoers.d"
-	dpkg-deb -b /tmp/deb-packing "${PACKAGE_PATHS[1]}"; # sudo
+	sudo chown -R root: /tmp/deb-packing; # Não vai pedir senha por causa do "sudoers.d"
+	dpkg-deb -b /tmp/deb-packing "${PACKAGE_PATHS[1]}";
 }
 
 process_return_cancel_button()
