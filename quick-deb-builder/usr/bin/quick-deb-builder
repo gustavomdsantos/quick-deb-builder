@@ -2,4 +2,4 @@
 
 DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) # Pega o diretório no qual o script está localizado (default: "/usr/bin")
 cd "$DIR"/../share/quick-deb-builder
-sudo ./quick-deb-builder.sh $HOME # Como a pasta sudoers.d está modificada, o sudo não irá perguntar senha
+sudo ./quick-deb-builder.sh "$HOME" # Como a pasta sudoers.d está modificada, o sudo não irá perguntar senha

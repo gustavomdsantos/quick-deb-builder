@@ -10,7 +10,7 @@ main()
 {
 	verify_GUI;
 
-	define_deb_IO_folder_paths;
+	define_deb_IO_folder_paths "$1";
 
 	create_deb_package;
 }
@@ -31,7 +31,7 @@ define_deb_IO_folder_paths()
 	false; # Para entrar no while
 	while [ $? -ne 0 ] # Enquanto a saída do último comando não for igual a ZERO (return =! 0)
 	do
-		package_path_tmp2=$(get_folder_paths);
+		package_path_tmp2=$(get_folder_paths "$1");
 			verifyReturnCode;
 		if [ "$?" != "1" ] # Se o usuário não quer sair do programa
 		then
@@ -47,7 +47,12 @@ define_deb_IO_folder_paths()
 
 get_folder_paths()
 {
-	package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $HOME --field 'Folder path to output .deb package\:':DIR $HOME --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
+	if [ -z $* ] # se nenhum parâmetro foi passado para o programa, no caso, "$HOME" do /usr/bin/quick-deb-builder
+	then
+		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $HOME --field 'Folder path to output .deb package\:':DIR $HOME --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
+	else
+		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $1 --field 'Folder path to output .deb package\:':DIR $1 --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
+	fi
 		process_return_cancel_button;
 	local returnCode=$?; # Armazena o return (variável "?") para retornar depois (variável local)
 	echo "$package_path_tmp"; # "return"
@@ -90,8 +95,8 @@ create_deb_package()
 	IFS=$old_IFS;
 
 	echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
-	echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis
-	chmod -R 0755 DEBIAN/ || chmod -R 0755 debian/; # Dá permissões rwxr-xr-x para pasta debian
+	echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
+	chmod -R 0755 DEBIAN/ || chmod -R 0755 debian/; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 
 	if find /tmp/deb-packing/etc/sudoers.d/ # se existe a pasta /etc/sudoers.d no pacote
 	then
@@ -163,7 +168,7 @@ verify_deb_structure()
 
 dialog_invalid_folder()
 {
-	yad --title "$APP_NAME" --error --center --width=350 --image="error" --window-icon="android" --icon-name="android" --text "<big><b>Invalid folder, try again.</b></big>" --text-align=center --button="OK:0";
+	yad --title "$APP_NAME" --error --center --width=350 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>Invalid folder, try again.</b></big>" --text-align=center --button="OK:0";
 }
 
 generateReturnCode()
@@ -171,4 +176,4 @@ generateReturnCode()
 	return $1;
 }
 
-main;
+main $*;
