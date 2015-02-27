@@ -1,9 +1,14 @@
 #! /bin/bash
 
+# Parâmetros obrigatórios que o "/usr/bin/quick-deb-builder" passa:
+# 	$1=$HOME - Caminho da pasta inicial do usuário comum
+#	$2=$USER - Nome do usuário comum
+
 APP_NAME="Quick DEB Builder"
 VERSION="0.1.0"
 HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree."
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
+CURRENT_USER="$2"
 true=1; false=0; # boolean
 
 main()
@@ -83,10 +88,10 @@ format_folder_paths()
 
 create_deb_package()
 {
-	cp -R "${PACKAGE_PATHS[0]}" /tmp/deb-packing; # Copia a pasta do pacote para a pasta temporária	
+	cp -R "${PACKAGE_PATHS[0]}" /tmp/deb_packing; # Copia a pasta do pacote para a pasta temporária	
 
-	local executable_files_tmp=$(find /tmp/deb-packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # | awk '{ print "\""$0"\""}') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta
-	local non_executable_files_tmp=$(find /tmp/deb-packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta
+	local executable_files_tmp=$(find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta
+	local non_executable_files_tmp=$(find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta
 
 	old_IFS=$IFS;
 	IFS=$'\n'; # define separador (quebra de linha) para array
@@ -96,15 +101,14 @@ create_deb_package()
 
 	echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
 	echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
-	chmod -R 0755 DEBIAN/ || chmod -R 0755 debian/; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
+	chmod -R 0755 /tmp/deb_packing/DEBIAN/ || chmod -R 0755 /tmp/deb_packing/debian/; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 
-	if find /tmp/deb-packing/etc/sudoers.d/ # se existe a pasta /etc/sudoers.d no pacote
-	then
-		chmod -R /tmp/deb-packing/etc/sudoers.d/ 0440;
-	fi
+	find /tmp/deb_packing/etc/sudoers.d/ -type f -exec chmod 0440 {} \; # Dá permissões r--r----- para todos os arquivos que estiverem na pasta /etc/sudoers.d, caso existam
 
-	chown -R root: /tmp/deb-packing; # sudo Não vai pedir senha por causa do "sudoers.d"
-	dpkg-deb -b /tmp/deb-packing "${PACKAGE_PATHS[1]}"; # sudo
+	DPKG_DEB_OUTPUT=$(dpkg-deb -b /tmp/deb_packing "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
+	echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$CURRENT_USER":; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo para o usuário atual (não "root")
+
+	rm -R /tmp/deb_packing; # exclui pasta temporária
 }
 
 process_return_cancel_button()
@@ -176,4 +180,4 @@ generateReturnCode()
 	return $1;
 }
 
-main $*;
+main $@; # Repassa os parâmetros de linha de comando para a função
