@@ -21,9 +21,13 @@ main()
 {
 	verify_GUI;
 
-	define_deb_IO_folder_paths "$1";
-
-	create_deb_package;
+	false; # Para entrar no while
+	while [ $? -ne 0 ] # Enquanto a saída do último comando não for igual a ZERO (return =! 0)
+	do
+		define_deb_IO_folder_paths "$1";
+		create_deb_package;
+	done
+	dialog_deb_creation_sucess;
 }
 
 verify_GUI()
@@ -94,10 +98,14 @@ format_folder_paths()
 
 create_deb_package()
 {
-	cp -R "${PACKAGE_PATHS[0]}" /tmp/deb_packing; # Copia a pasta do pacote para a pasta temporária	
+	# "2>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
+	2>/tmp/quick-deb-builder.log cp -R "${PACKAGE_PATHS[0]}" /tmp/deb_packing; # Copia a pasta do pacote para a pasta temporária
+		verify_installation_process_sucess;	
 
-	local executable_files_tmp=$(find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta
-	local non_executable_files_tmp=$(find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta
+	local executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta
+		verify_installation_process_sucess;
+	local non_executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta
+		verify_installation_process_sucess;
 
 	old_IFS=$IFS;
 	IFS=$'\n'; # define separador (quebra de linha) para array
@@ -105,18 +113,26 @@ create_deb_package()
 	non_executable_files=($(echo "$non_executable_files_tmp"));
 	IFS=$old_IFS;
 
-	echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
-	echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
-	chmod -R 0755 /tmp/deb_packing/DEBIAN/ || chmod -R 0755 /tmp/deb_packing/debian/; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
+	2>/tmp/quick-deb-builder.log echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
+		exec verify_installation_process_sucess;
+	2>/tmp/quick-deb-builder.log echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
+		exec verify_installation_process_sucess;
+	2>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packing/DEBIAN/ || 2>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packing/debian/; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
+		exec verify_installation_process_sucess;
 	2>/dev/null chmod 0644 /tmp/deb_packing/DEBIAN/md5sums || 2>/dev/null chmod 0644 /tmp/deb_packing/debian/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
-
+		exec verify_installation_process_sucess;
 	2>/dev/null find /tmp/deb_packing/etc/sudoers.d/ -type f -exec chmod 0440 {} \; # Dá permissões r--r----- para todos os arquivos que estiverem na pasta /etc/sudoers.d, caso existam
+		exec verify_installation_process_sucess;
 	2>/dev/null find /tmp/deb_packing/usr/share/applications /tmp/deb_packing/usr/share/doc/ /tmp/deb_packing/usr/share/man/ -type f -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software e de 
+		exec verify_installation_process_sucess;
 
-	DPKG_DEB_OUTPUT=$(dpkg-deb -b /tmp/deb_packing "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
-	echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$CURRENT_USER":; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo para o usuário atual (não "root")
+	DPKG_DEB_OUTPUT=$(2>/tmp/quick-deb-builder.log dpkg-deb -b /tmp/deb_packing "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
+		exec verify_installation_process_sucess;
 
-	rm -R /tmp/deb_packing; # exclui pasta temporária
+	2>/tmp/quick-deb-builder.log echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$CURRENT_USER":; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo para o usuário atual (não "root")
+		exec verify_installation_process_sucess;
+	2>/tmp/quick-deb-builder.log rm -R /tmp/deb_packing; # exclui pasta temporária
+		exec verify_installation_process_sucess;
 }
 
 process_return_cancel_button()
@@ -154,6 +170,15 @@ verifyReturnCode()
 	fi
 }
 
+verify_installation_process_sucess()
+{
+	if [ "$?" != "0" ]
+	then
+		dialog_deb_creation_error;
+		return 1;
+	fi
+}
+
 verify_deb_structure()
 {
 	if find "${PACKAGE_PATHS[0]}/DEBIAN" > /dev/null || find "${PACKAGE_PATHS[0]}/debian" > /dev/null
@@ -181,6 +206,17 @@ verify_deb_structure()
 dialog_invalid_folder()
 {
 	yad --title "$APP_NAME" --error --center --width=350 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>Invalid folder, try again.</b></big>" --text-align=center --button="OK:0";
+}
+
+dialog_deb_creation_error()
+{
+	cat /tmp/quick-deb-builder.log | yad --title "$APP_NAME" --text-info --center --width=350 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>An unexpected error occured in creating .deb package.</b></big>\n\nLog of the error:" --button="OK:0";
+	rm -f /tmp/quick-deb-builder.log;
+}
+
+dialog_deb_creation_sucess()
+{
+	yad --title "$APP_NAME" --info --center --width=350 --image="package" --window-icon="package" --icon-name="package" --text "<b>DEB Package created sucessfully.</b>" --text-align=center --button="OK:0";
 }
 
 generateReturnCode()
