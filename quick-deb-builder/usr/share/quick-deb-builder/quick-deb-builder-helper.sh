@@ -11,9 +11,9 @@
 #	100 = "No" para fechar
 
 APP_NAME="Quick DEB Builder"
-VERSION="0.1.0"
-HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree."
+VERSION="0.1.1"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
+HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree."
 
 displayAboutDialog()
 {
@@ -22,7 +22,7 @@ displayAboutDialog()
 
 displayCancelDialog()
 {
-	yad --title "$APP_NAME" --info --center --width=350 --image="help" --window-icon="package" --icon-name="package" --text "<b>Are you sure you want to exit from $APP_NAME?</b>" --text-align=center --button=No:1 --button=Yes:0;
+	yad --title "$APP_NAME" --info --center --width=400 --image="help" --window-icon="package" --icon-name="package" --text "<big>Are you sure you want to exit from $APP_NAME?</big>" --text-align=center --button=No:1 --button=Yes:0;
 }
 
 verify_term_all()

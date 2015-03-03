@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Quick DEB Builder
+Exec=quick-deb-builder
+Comment=A simple tool that quickly creates .deb packages from an existing build tree.
+Icon=package
+Type=Application
+Terminal=false
+StartupNotify=true
+Encoding=UTF-8
+Categories=GNOME;GTK;Development;

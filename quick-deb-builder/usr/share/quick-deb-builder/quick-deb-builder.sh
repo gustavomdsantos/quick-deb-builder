@@ -10,10 +10,12 @@
 # 	$1=$HOME - Caminho da pasta inicial do usuário comum
 #	$2=$USER - Nome do usuário comum
 
+set -u; # Bash will exit the script if you try to use an uninitialised variable
+
 APP_NAME="Quick DEB Builder"
-VERSION="0.1.0"
-HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree."
+VERSION="0.1.1"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
+HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
 true=1; false=0; # boolean
 
@@ -25,7 +27,7 @@ main()
 	while [ $? -ne 0 ] # Enquanto a saída do último comando não for igual a ZERO (return =! 0)
 	do
 		define_deb_IO_folder_paths "$1";
-		create_deb_package;
+		(create_deb_package); # Existe um "exit" que pode ser executado dentro da função; para não finalizar o script inteiro, a função é executada em subshell - "(" ")"
 	done
 	dialog_deb_creation_sucess;
 }
@@ -64,9 +66,9 @@ get_folder_paths()
 {
 	if [ -z $* ] # se nenhum parâmetro foi passado para o programa, no caso, "$HOME" do /usr/bin/quick-deb-builder
 	then
-		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $HOME --field 'Folder path to output .deb package\:':DIR $HOME --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
+		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "<b>Folder selection for DEB creating</b>\n\n$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $HOME --field 'Folder path to output .deb package\:':DIR $HOME --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
 	else
-		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $1 --field 'Folder path to output .deb package\:':DIR $1 --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
+		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "<b>Folder selection for DEB creating</b>\n\n$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $1 --field 'Folder path to output .deb package\:':DIR $1 --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
 	fi
 		process_return_cancel_button;
 	local returnCode=$?; # Armazena o return (variável "?") para retornar depois (variável local)
@@ -100,39 +102,46 @@ create_deb_package()
 {
 	# "2>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
 	2>/tmp/quick-deb-builder.log cp -R "${PACKAGE_PATHS[0]}" /tmp/deb_packing; # Copia a pasta do pacote para a pasta temporária
-		verify_installation_process_sucess;	
+		verify_installation_process_sucess;
+
 
 	local executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta
 		verify_installation_process_sucess;
+
 	local non_executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta
 		verify_installation_process_sucess;
 
+	# Processar lista de arquivos executáveis e não-executáveis como array
 	old_IFS=$IFS;
 	IFS=$'\n'; # define separador (quebra de linha) para array
 	executable_files=($(echo "$executable_files_tmp")); # array / variável GLOBAL
 	non_executable_files=($(echo "$non_executable_files_tmp"));
 	IFS=$old_IFS;
 
+
 	2>/tmp/quick-deb-builder.log echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
-		exec verify_installation_process_sucess;
+		verify_installation_process_sucess;
+
 	2>/tmp/quick-deb-builder.log echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
-		exec verify_installation_process_sucess;
+		verify_installation_process_sucess;
+
 	2>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packing/DEBIAN/ || 2>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packing/debian/; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
-		exec verify_installation_process_sucess;
+		verify_installation_process_sucess;
+
+	# As 4 próximas linhas não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
 	2>/dev/null chmod 0644 /tmp/deb_packing/DEBIAN/md5sums || 2>/dev/null chmod 0644 /tmp/deb_packing/debian/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
-		exec verify_installation_process_sucess;
 	2>/dev/null find /tmp/deb_packing/etc/sudoers.d/ -type f -exec chmod 0440 {} \; # Dá permissões r--r----- para todos os arquivos que estiverem na pasta /etc/sudoers.d, caso existam
-		exec verify_installation_process_sucess;
-	2>/dev/null find /tmp/deb_packing/usr/share/applications /tmp/deb_packing/usr/share/doc/ /tmp/deb_packing/usr/share/man/ -type f -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software e de 
-		exec verify_installation_process_sucess;
+	2>/dev/null /tmp/deb_packing/usr/share/doc/ /tmp/deb_packing/usr/share/man/ -type f -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software
+	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
 	DPKG_DEB_OUTPUT=$(2>/tmp/quick-deb-builder.log dpkg-deb -b /tmp/deb_packing "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
-		exec verify_installation_process_sucess;
+		 verify_installation_process_sucess;
 
 	2>/tmp/quick-deb-builder.log echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$CURRENT_USER":; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo para o usuário atual (não "root")
-		exec verify_installation_process_sucess;
+		 verify_installation_process_sucess;
+
 	2>/tmp/quick-deb-builder.log rm -R /tmp/deb_packing; # exclui pasta temporária
-		exec verify_installation_process_sucess;
+		 verify_installation_process_sucess;
 }
 
 process_return_cancel_button()
@@ -175,7 +184,9 @@ verify_installation_process_sucess()
 	if [ "$?" != "0" ]
 	then
 		dialog_deb_creation_error;
-		return 1;
+		rm -f /tmp/quick-deb-builder.log; # Exclui o arquivo de log
+		rm -R -f /tmp/deb_packing; # Exclui a pasta temporária 
+		exit 1; # Este "exit" NÃO vai finalizar o script inteiro pois ele vai ser chamado em subshell
 	fi
 }
 
@@ -210,8 +221,7 @@ dialog_invalid_folder()
 
 dialog_deb_creation_error()
 {
-	cat /tmp/quick-deb-builder.log | yad --title "$APP_NAME" --text-info --center --width=350 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>An unexpected error occured in creating .deb package.</b></big>\n\nLog of the error:" --button="OK:0";
-	rm -f /tmp/quick-deb-builder.log;
+	cat /tmp/quick-deb-builder.log | yad --title "$APP_NAME" --text-info --center --width=500 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>An unexpected error occured in creating .deb package.</b></big>\n\nLog of the error:" --button="OK:0";
 }
 
 dialog_deb_creation_sucess()

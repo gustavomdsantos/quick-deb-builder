@@ -1,8 +1,9 @@
 Package: quick-deb-builder
-Version: 0.1.0
+Version: 0.1.1
 Section: devel
 Maintainer: Gustavo Moraes <gustavosotnas1@gmail.com>
 Homepage: https://github.com/gustavosotnas/quick-deb-builder
+Installed-Size: 25
 Priority: optional
 Architecture: all
 Depends: yad
@@ -11,6 +12,5 @@ Description: Quick DEB Builder
  from an existing build tree. Just insert a folder path with a "debian-like" 
  directory structure and an output folder path.
  .
- It automatically solves the most common permission problems for files 
+ It automatically solves most common permission problems for files 
  and directories in creating .deb packages.
-

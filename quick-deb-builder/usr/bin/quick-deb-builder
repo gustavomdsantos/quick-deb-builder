@@ -6,6 +6,8 @@
 # License. See the file COPYING in the main directory of this archive
 # for more details.
 
+set -u; # Bash will exit the script if you try to use an uninitialised variable
+
 DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) # Pega o diretório no qual o script está localizado (default: "/usr/bin")
 cd "$DIR"/../share/quick-deb-builder
 sudo ./quick-deb-builder.sh "$HOME" "$USER" # quick-deb-builder.sh (String home, String user) # Como a pasta sudoers.d está modificada, o sudo não irá perguntar senha
