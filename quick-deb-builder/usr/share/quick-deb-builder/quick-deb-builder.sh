@@ -13,7 +13,7 @@
 set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="0.1.1"
+VERSION="0.2.0"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -98,50 +98,154 @@ format_folder_paths()
 	#echo "Depois: ${PACKAGE_PATHS[0]} ${PACKAGE_PATHS[1]}";
 }
 
-create_deb_package()
+create() # Procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas
 {
-	# "2>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
+	NUM_STEPS=14; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
+	# * "2>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
+
+	# Passo 1: Copiando pasta para empacotamento para a pasta temporária (/tmp/)
+
+	generateProgressNum; # Porcentagem de progresso na janela
+	echo "# Copying files to the temporary folder"; # Texto da janela (começa com '# ')
 	2>/tmp/quick-deb-builder.log cp -R "${PACKAGE_PATHS[0]}" /tmp/deb_packing; # Copia a pasta do pacote para a pasta temporária
 		verify_installation_process_sucess;
 
+	# Passo 2: Verificando existência de arquivos executáveis (mimetype "aplication/...") na pasta
 
-	local executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta
+	generateProgressNum;
+	echo "# Checking existence of executable files in the folder";
+	local executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta pra variável local
 		verify_installation_process_sucess;
 
-	local non_executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta
+	# Passo 3: Verificando existência de arquivos não-executáveis (mimetype != "aplication/...") na pasta
+
+	generateProgressNum;
+	echo "# Checking existence of non-executable files in the folder";
+	local non_executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta pra variável local
 		verify_installation_process_sucess;
 
-	# Processar lista de arquivos executáveis e não-executáveis como array
-	old_IFS=$IFS;
+	# Passo 4: Listando todos os arquivos executáveis para "array"
+
+	generateProgressNum;
+	echo "# Listing all files in the folder";
+
+	old_IFS=$IFS; # IFS: Processa string de variáveis com separador definido para variável "array"
 	IFS=$'\n'; # define separador (quebra de linha) para array
 	executable_files=($(echo "$executable_files_tmp")); # array / variável GLOBAL
 	non_executable_files=($(echo "$non_executable_files_tmp"));
 	IFS=$old_IFS;
 
+	# Passo 5: Modificando as permissões de arquivos executáveis
 
+	generateProgressNum;
+	echo "# Modifying permissions of executable files";
 	2>/tmp/quick-deb-builder.log echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
 		verify_installation_process_sucess;
 
+	# Passo 6: Modificando as permissões de arquivos não executáveis
+
+	generateProgressNum;
+	echo "# Modifying permissions of non-executable files";
 	2>/tmp/quick-deb-builder.log echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 		verify_installation_process_sucess;
 
+	# Passo 7: Modificando as permissões do diretório de controle do pacote deb
+
+	generateProgressNum;
+	echo "# Modifying permissions of the files in DEBIAN directory";
 	2>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packing/DEBIAN/ || 2>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packing/debian/; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 		verify_installation_process_sucess;
 
-	# As 4 próximas linhas não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
+	#### As 4 próximas linhas não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
+	# Passo 8: Verificando e modificando as permissões do arquivo md5sums na pasta de controle do pacote deb
+
+	generateProgressNum;
+	echo "# Verifying and modifying permissions of the md5sums file";
 	2>/dev/null chmod 0644 /tmp/deb_packing/DEBIAN/md5sums || 2>/dev/null chmod 0644 /tmp/deb_packing/debian/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
+
+	# Passo 9: Verificando e modificando as permissões dos arquivos de sudoers na pasta
+
+	generateProgressNum;
+	echo "# Verifying and modifying permissions of files in the sudoers folder";
 	2>/dev/null find /tmp/deb_packing/etc/sudoers.d/ -type f -exec chmod 0440 {} \; # Dá permissões r--r----- para todos os arquivos que estiverem na pasta /etc/sudoers.d, caso existam
+
+	# Passo 10: Verificando e modificando as permissões dos arquivos de documentação na pasta
+
+	generateProgressNum;
+	echo "# Verifying and modifying permissions of documentation files in the folder";
 	2>/dev/null /tmp/deb_packing/usr/share/doc/ /tmp/deb_packing/usr/share/man/ -type f -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software
+
+	# Passo 11: Verificando e modificando as permissões dos arquivos .desktop
+
+	generateProgressNum;
+	echo "# Verifying and modifying permissions of .desktop files";
 	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
+	####
+
+	# Passo 12: Empacotando arquivos
+
+	generateProgressNum;
+	echo "# Packaging files";
 	DPKG_DEB_OUTPUT=$(2>/tmp/quick-deb-builder.log dpkg-deb -b /tmp/deb_packing "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
-		 verify_installation_process_sucess;
+		verify_installation_process_sucess;
 
-	2>/tmp/quick-deb-builder.log echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$CURRENT_USER":; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo para o usuário atual (não "root")
-		 verify_installation_process_sucess;
+	# Passo 13: Mudando proprietário do arquivo .deb de "root" para usuário atual
 
+	generateProgressNum;
+	echo "# Changing owner of the .deb file";
+	2>/tmp/quick-deb-builder.log echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$CURRENT_USER":; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo
+		verify_installation_process_sucess;
+
+	# Passo 14: Removendo arquivos temporários
+
+	generateProgressNum;
+	echo "# Removing temporary files";
 	2>/tmp/quick-deb-builder.log rm -R /tmp/deb_packing; # exclui pasta temporária
-		 verify_installation_process_sucess;
+		verify_installation_process_sucess;
+}
+
+create_deb_package()
+{
+	create | 
+	yad --progress \
+	--auto-close --no-cancel \
+	--title="$INSTALLING_TEXT $APP_NAME by $APP_AUTHOR" \
+	--text="Building DEB Package..."
+	--percentage=0 --width=420;
+}
+
+#### FUNÇÕES AUXILIARES DO QUICK-DEB-BUILDER ####
+
+function generateProgressNum() # Função para gerar o número do progresso da instalação (de acordo com o número de passos informado)
+{
+	if [ -z "$CURRENT_STEP" ]
+	then
+		CURRENT_STEP=0; # Apenas inicialização
+	fi
+	if [ -z "$1" ] # Nenhum parâmetro foi passado
+	then
+		CURRENT_STEP=$((CURRENT_STEP+1)); # Incrementa passo atual antes do cálculo
+
+		# Fórmula geral para calcular o percentual da barra de progresso:
+		STEP=$(((CURRENT_STEP*100)/NUM_STEPS));
+		if [ "$STEP" == "100" ] # Porque o zenity se fecha automaticamente quando a barra de progresso atinge 100%
+		then
+			STEP=99;
+		fi
+		echo $STEP; # return STEP;
+	else # Precisa passar 2 parâmetros: 
+		N=$1; # Sub-passo atual
+		T=$2; # Total de sub-passos
+
+		# Fórmula específica para calcular o percentual da barra de progresso em sub-passos (usado em estruturas de repetição):
+		STEP=$((((CURRENT_STEP*100)/NUM_STEPS)+(N*10/T+1)));
+		if [ "$STEP" == "100" ] # Porque o zenity se fecha automaticamente quando a barra de progresso atinge 100%
+		then
+			STEP=99;
+		fi
+		echo $STEP; # return STEP;
+	fi
 }
 
 process_return_cancel_button()

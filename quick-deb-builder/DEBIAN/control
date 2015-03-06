@@ -1,9 +1,9 @@
 Package: quick-deb-builder
-Version: 0.1.1
+Version: 0.2.0
 Section: devel
 Maintainer: Gustavo Moraes <gustavosotnas1@gmail.com>
 Homepage: https://github.com/gustavosotnas/quick-deb-builder
-Installed-Size: 25
+Installed-Size: 34
 Priority: optional
 Architecture: all
 Depends: yad
