@@ -10,7 +10,7 @@
 # 	$1=$HOME - Caminho da pasta inicial do usuário comum
 #	$2=$USER - Nome do usuário comum
 
-set -u; # Bash will exit the script if you try to use an uninitialised variable
+#set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
 VERSION="0.2.0"
@@ -27,7 +27,7 @@ main()
 	while [ $? -ne 0 ] # Enquanto a saída do último comando não for igual a ZERO (return =! 0)
 	do
 		define_deb_IO_folder_paths "$1";
-		(create_deb_package); # Existe um "exit" que pode ser executado dentro da função; para não finalizar o script inteiro, a função é executada em subshell - "(" ")"
+		(create_deb_package); # Existe um "exit" que pode ser executado dentro da função; para não finalizar o script inteiro, a função é executada em subshell: "(" + código + ")"
 	done
 	dialog_deb_creation_sucess;
 }
@@ -98,7 +98,7 @@ format_folder_paths()
 	#echo "Depois: ${PACKAGE_PATHS[0]} ${PACKAGE_PATHS[1]}";
 }
 
-create() # Procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas
+dcreate() # Procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas
 {
 	NUM_STEPS=14; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
 	# * "2>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
@@ -207,12 +207,12 @@ create() # Procedimento de criação do pacote deb com resolução de problemas 
 
 create_deb_package()
 {
-	create | 
+	dcreate | 
 	yad --progress \
-	--auto-close --no-cancel \
-	--title="$INSTALLING_TEXT $APP_NAME by $APP_AUTHOR" \
-	--text="Building DEB Package..."
-	--percentage=0 --width=420;
+	--center --auto-close --no-buttons --on-top \
+	--title="$APP_NAME" \
+	--text="Building deb package..." \
+	--width=420 --borders=5; #--percentage=0
 }
 
 #### FUNÇÕES AUXILIARES DO QUICK-DEB-BUILDER ####
@@ -330,7 +330,7 @@ dialog_deb_creation_error()
 
 dialog_deb_creation_sucess()
 {
-	yad --title "$APP_NAME" --info --center --width=350 --image="package" --window-icon="package" --icon-name="package" --text "<b>DEB Package created sucessfully.</b>" --text-align=center --button="OK:0";
+	yad --title "$APP_NAME" --info --center --width=350 --image="package" --window-icon="package" --icon-name="package" --text "<b>DEB package created sucessfully.</b>" --text-align=center --button="OK:0";
 }
 
 generateReturnCode()
