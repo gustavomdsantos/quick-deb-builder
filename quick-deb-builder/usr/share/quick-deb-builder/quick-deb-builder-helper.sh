@@ -11,7 +11,7 @@
 #	100 = "No" para fechar
 
 APP_NAME="Quick DEB Builder"
-VERSION="0.2.0"
+VERSION="0.2.1"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree."
 

@@ -13,7 +13,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="0.2.0"
+VERSION="0.2.1"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -100,7 +100,7 @@ format_folder_paths()
 
 dcreate() # Procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas
 {
-	NUM_STEPS=14; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
+	NUM_STEPS=17; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
 	# * "2>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
 
 	# Passo 1: Copiando pasta para empacotamento para a pasta temporária (/tmp/)
@@ -156,7 +156,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	2>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packing/DEBIAN/ || 2>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packing/debian/; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 		verify_installation_process_sucess;
 
-	#### As 4 próximas linhas não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
+	#### Os 6 próximos passos não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
 	# Passo 8: Verificando e modificando as permissões do arquivo md5sums na pasta de controle do pacote deb
 
 	generateProgressNum;
@@ -173,31 +173,48 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of documentation files in the folder";
-	2>/dev/null /tmp/deb_packing/usr/share/doc/ /tmp/deb_packing/usr/share/man/ -type f -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software
+	2>/dev/null find /tmp/deb_packing/usr/share/doc/ -type f | xargs chmod 644; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software /tmp/deb_packing/usr/share/man/ 
 
-	# Passo 11: Verificando e modificando as permissões dos arquivos .desktop
+	# Passo 11: Verificando e modificando as permissões dos arquivos de manual na pasta
+
+	generateProgressNum;
+	echo "# Verifying and modifying permissions of man files in the folder";
+	2>/dev/null find /tmp/deb_packing/usr/share/man/ -type f | xargs chmod 644; # Retira permissões de execução (x) para todos os arquivos relacionados à manuais de usuário (man files)
+
+	# Passo 12: Verificando e modificando as permissões dos arquivos .xml
+
+	generateProgressNum;
+	echo "# Verifying and modifying permissions of .xml files";
+	2>/dev/null find /tmp/deb_packing -type f -name "*.xml" | xargs chmod -x; # Retira permissões de execução (x) para todos os arquivos ".xml"
+
+	# Passo 13: Verificando e modificando as permissões dos arquivos .desktop
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .desktop files";
-	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
+	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" | xargs chmod -x; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
+
+	# Passo 14: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
+	generateProgressNum;
+	echo "# Modifying permissions of files in 'bin' folders";
+	2>/dev/null chmod -R 0755 /tmp/deb_packing/usr/bin /tmp/deb_packing/usr/local/bin /tmp/deb_packing/usr/local/sbin /tmp/deb_packing/usr/sbin /tmp/deb_packing/sbin /tmp/deb_packing/bin /tmp/deb_packing/usr/games /tmp/deb_packing/usr/local/games; # Dá permissões rwxr-xr-x para todos os arquivos que estiverem em pastas de executáveis (caso existam)
 
 	####
 
-	# Passo 12: Empacotando arquivos
+	# Passo 15: Empacotando arquivos
 
 	generateProgressNum;
 	echo "# Packaging files";
 	DPKG_DEB_OUTPUT=$(2>/tmp/quick-deb-builder.log dpkg-deb -b /tmp/deb_packing "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
 		verify_installation_process_sucess;
 
-	# Passo 13: Mudando proprietário do arquivo .deb de "root" para usuário atual
+	# Passo 16: Mudando proprietário do arquivo .deb de "root" para usuário atual
 
 	generateProgressNum;
 	echo "# Changing owner of the .deb file";
 	2>/tmp/quick-deb-builder.log echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$CURRENT_USER":; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo
 		verify_installation_process_sucess;
 
-	# Passo 14: Removendo arquivos temporários
+	# Passo 17: Removendo arquivos temporários
 
 	generateProgressNum;
 	echo "# Removing temporary files";
