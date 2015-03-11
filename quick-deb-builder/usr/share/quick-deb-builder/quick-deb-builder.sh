@@ -13,7 +13,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="0.2.1"
+VERSION="0.3.0"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -66,9 +66,9 @@ get_folder_paths()
 {
 	if [ -z $* ] # se nenhum parâmetro foi passado para o programa, no caso, "$HOME" do /usr/bin/quick-deb-builder
 	then
-		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "<b>Folder selection for DEB creating</b>\n\n$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $HOME --field 'Folder path to output .deb package\:':DIR $HOME --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
+		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "<b>Folder selection for DEB creating</b>\n\n$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $HOME --field 'Folder path to output .deb package\:':DIR $HOME --borders=5 --button=About:"./quick-deb-builder-helper.sh about" --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
 	else
-		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "<b>Folder selection for DEB creating</b>\n\n$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $1 --field 'Folder path to output .deb package\:':DIR $1 --borders=5 --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
+		package_path_tmp=$(yad --title "$APP_NAME" --form --center --width=500 --image="package" --window-icon="package" --icon-name="package" --text "<b>Folder selection for DEB creating</b>\n\n$HELP_DESCRIPTION_TEXT\n\n" --field 'Folder path to build tree\:':DIR $1 --field 'Folder path to output .deb package\:':DIR $1 --borders=5 --button=About:"./quick-deb-builder-helper.sh about" --button=Cancel:"./quick-deb-builder-helper.sh cancel" --button=OK:0)
 	fi
 		process_return_cancel_button;
 	local returnCode=$?; # Armazena o return (variável "?") para retornar depois (variável local)
@@ -194,6 +194,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" | xargs chmod -x; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
 	# Passo 14: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
+
 	generateProgressNum;
 	echo "# Modifying permissions of files in 'bin' folders";
 	2>/dev/null chmod -R 0755 /tmp/deb_packing/usr/bin /tmp/deb_packing/usr/local/bin /tmp/deb_packing/usr/local/sbin /tmp/deb_packing/usr/sbin /tmp/deb_packing/sbin /tmp/deb_packing/bin /tmp/deb_packing/usr/games /tmp/deb_packing/usr/local/games; # Dá permissões rwxr-xr-x para todos os arquivos que estiverem em pastas de executáveis (caso existam)
