@@ -13,7 +13,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="0.3.0"
+VERSION="0.3.1"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -173,25 +173,25 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of documentation files in the folder";
-	2>/dev/null find /tmp/deb_packing/usr/share/doc/ -type f | xargs chmod 644; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software /tmp/deb_packing/usr/share/man/ 
+	2>/dev/null find /tmp/deb_packing/usr/share/doc/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software /tmp/deb_packing/usr/share/man/ 
 
 	# Passo 11: Verificando e modificando as permissões dos arquivos de manual na pasta
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of man files in the folder";
-	2>/dev/null find /tmp/deb_packing/usr/share/man/ -type f | xargs chmod 644; # Retira permissões de execução (x) para todos os arquivos relacionados à manuais de usuário (man files)
+	2>/dev/null find /tmp/deb_packing/usr/share/man/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à manuais de usuário (man files)
 
 	# Passo 12: Verificando e modificando as permissões dos arquivos .xml
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .xml files";
-	2>/dev/null find /tmp/deb_packing -type f -name "*.xml" | xargs chmod -x; # Retira permissões de execução (x) para todos os arquivos ".xml"
+	2>/dev/null find /tmp/deb_packing -type f -name "*.xml" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".xml"
 
 	# Passo 13: Verificando e modificando as permissões dos arquivos .desktop
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .desktop files";
-	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" | xargs chmod -x; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
+	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
 	# Passo 14: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
 
@@ -199,7 +199,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	echo "# Modifying permissions of files in 'bin' folders";
 	2>/dev/null chmod -R 0755 /tmp/deb_packing/usr/bin /tmp/deb_packing/usr/local/bin /tmp/deb_packing/usr/local/sbin /tmp/deb_packing/usr/sbin /tmp/deb_packing/sbin /tmp/deb_packing/bin /tmp/deb_packing/usr/games /tmp/deb_packing/usr/local/games; # Dá permissões rwxr-xr-x para todos os arquivos que estiverem em pastas de executáveis (caso existam)
 
-	####
+	#### FIM DA BUSCA ####
 
 	# Passo 15: Empacotando arquivos
 
