@@ -13,7 +13,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="0.3.1"
+VERSION="1.0"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -100,7 +100,7 @@ format_folder_paths()
 
 dcreate() # Procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas
 {
-	NUM_STEPS=17; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
+	NUM_STEPS=18; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
 	# * "2>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
 
 	# Passo 1: Copiando pasta para empacotamento para a pasta temporária (/tmp/)
@@ -187,13 +187,19 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	echo "# Verifying and modifying permissions of .xml files";
 	2>/dev/null find /tmp/deb_packing -type f -name "*.xml" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".xml"
 
-	# Passo 13: Verificando e modificando as permissões dos arquivos .desktop
+	# Passo 13: Verificando e modificando as permissões dos arquivos .html
+
+	generateProgressNum;
+	echo "# Verifying and modifying permissions of .xml files";
+	2>/dev/null find /tmp/deb_packing -type f -name "*.html" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".html"
+
+	# Passo 14: Verificando e modificando as permissões dos arquivos .desktop
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .desktop files";
 	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
-	# Passo 14: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
+	# Passo 15: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
 
 	generateProgressNum;
 	echo "# Modifying permissions of files in 'bin' folders";
@@ -201,21 +207,23 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	#### FIM DA BUSCA ####
 
-	# Passo 15: Empacotando arquivos
+	# Passo 16: Empacotando arquivos
 
 	generateProgressNum;
 	echo "# Packaging files";
 	DPKG_DEB_OUTPUT=$(2>/tmp/quick-deb-builder.log dpkg-deb -b /tmp/deb_packing "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
 		verify_installation_process_sucess;
 
-	# Passo 16: Mudando proprietário do arquivo .deb de "root" para usuário atual
+	# Passo 17: Mudando proprietário do arquivo .deb de "root" para usuário atual
 
 	generateProgressNum;
 	echo "# Changing owner of the .deb file";
-	2>/tmp/quick-deb-builder.log echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$CURRENT_USER":; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo
+	DEB_PACKAGE_CREATED_NAME=$(echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4);
+	1>/tmp/quick-deb-builder.file echo "$DEB_PACKAGE_CREATED_NAME"; # quick-deb-builder.file armazena o caminho do arquivo .deb criado (para uso na função "dialog_deb_creation_sucess") # Isso foi necessário porque esta função é executada em subshell - as variáveis criadas aqui não são visíveis para seu "supershell"
+	2>/tmp/quick-deb-builder.log chown "$CURRENT_USER": "$DEB_PACKAGE_CREATED_NAME"; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo
 		verify_installation_process_sucess;
 
-	# Passo 17: Removendo arquivos temporários
+	# Passo 18: Removendo arquivos temporários
 
 	generateProgressNum;
 	echo "# Removing temporary files";
@@ -344,11 +352,23 @@ dialog_invalid_folder()
 dialog_deb_creation_error()
 {
 	cat /tmp/quick-deb-builder.log | yad --title "$APP_NAME" --text-info --center --width=500 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>An unexpected error occured in creating .deb package.</b></big>\n\nLog of the error:" --button="OK:0";
+	remove_temp_files;
 }
 
 dialog_deb_creation_sucess()
 {
-	yad --title "$APP_NAME" --info --center --width=350 --image="package" --window-icon="package" --icon-name="package" --text "<b>DEB package created sucessfully.</b>" --text-align=center --button="OK:0";
+	local DEB_PACKAGE_CREATED_NAME=$(cat /tmp/quick-deb-builder.file); # Lê o nome do arquivo .deb criado (armazenado em arquivo)
+	yad --title "$APP_NAME" --info --center --width=350 --image="package" --window-icon="package" --icon-name="package" --text "<b>DEB package created sucessfully.</b>\n\nName of the created package:\n<tt>$DEB_PACKAGE_CREATED_NAME</tt>\n\n Do you want to open the package?" --text-align=center --button="No:1" --button="Yes:0";
+	if [ "$?" == "0" ]
+	then
+		xdg-open "$DEB_PACKAGE_CREATED_NAME";
+	fi
+	remove_temp_files;
+}
+
+remove_temp_files()
+{
+	rm -f /tmp/quick-deb-builder.log /tmp/quick-deb-builder.file; # remove arquivos temporários
 }
 
 generateReturnCode()
