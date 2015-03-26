@@ -10,9 +10,17 @@
 # License. See the file COPYING in the main directory of this archive
 # for more details.
 
+if [ "$TERM" == "" ] || [ "$TERM" == "dumb" ] # Se o script não estiver sendo executado em Terminal (interface gráfica)
+then
+	zenity --error --text="<b>Error: this script may execute in a Terminal!</b>"; # Este script tem de ser executadi em um Terminal!
+	exit 1;
+fi
+
 sudo apt-get purge -y quick-deb-builder
 echo -e "\033[1;34m\n\nO comando 'apt-get' retornou $?\n\n\033[0m";
+
 sudo ./Makefile-deb "$USER" ../quick-deb-builder/ /home/"$USER"/Área\ de\ Trabalho/
 echo -e "\033[1;34m\n\nO comando 'Makefile-deb' retornou $?\n\n\033[0m";
+
 sudo dpkg -i /home/"$USER"/Área\ de\ Trabalho/quick-deb-builder*.deb
 echo -e "\033[1;34m\n\nO comando 'dpkg' retornou $?\n\n\033[0m";

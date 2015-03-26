@@ -13,7 +13,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.0.1"
+VERSION="1.0.2"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -228,6 +228,7 @@ create_deb_package()
 	--title="$APP_NAME" \
 	--text="Building deb package..." \
 	--width=420 --borders=5; #--percentage=0
+	return $PIPESTATUS; # retorna o EXIT CODE do dcreate
 }
 
 #### FUNÇÕES AUXILIARES DO QUICK-DEB-BUILDER ####
