@@ -13,7 +13,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.0"
+VERSION="1.0.1"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -100,7 +100,7 @@ format_folder_paths()
 
 dcreate() # Procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas
 {
-	NUM_STEPS=18; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
+	NUM_STEPS=17; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
 	# * "2>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
 
 	# Passo 1: Copiando pasta para empacotamento para a pasta temporária (/tmp/)
@@ -114,42 +114,31 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	generateProgressNum;
 	echo "# Checking existence of executable files in the folder";
-	local executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta pra variável local
+	list_executable_files; # cria a variável do tipo "array": "${executable_files[*]}"
 		verify_installation_process_sucess;
 
 	# Passo 3: Verificando existência de arquivos não-executáveis (mimetype != "aplication/...") na pasta
 
 	generateProgressNum;
 	echo "# Checking existence of non-executable files in the folder";
-	local non_executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta pra variável local
+	list_non_executable_files; # cria a variável do tipo "array": "${non_executable_files[*]}"
 		verify_installation_process_sucess;
 
-	# Passo 4: Listando todos os arquivos executáveis para "array"
-
-	generateProgressNum;
-	echo "# Listing all files in the folder";
-
-	old_IFS=$IFS; # IFS: Processa string de variáveis com separador definido para variável "array"
-	IFS=$'\n'; # define separador (quebra de linha) para array
-	executable_files=($(echo "$executable_files_tmp")); # array / variável GLOBAL
-	non_executable_files=($(echo "$non_executable_files_tmp"));
-	IFS=$old_IFS;
-
-	# Passo 5: Modificando as permissões de arquivos executáveis
+	# Passo 4: Modificando as permissões de arquivos executáveis
 
 	generateProgressNum;
 	echo "# Modifying permissions of executable files";
-	2>/tmp/quick-deb-builder.log echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
+	echo "${executable_files[*]}" | xargs chmod 0755 2>/tmp/quick-deb-builder.log; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
 		verify_installation_process_sucess;
 
-	# Passo 6: Modificando as permissões de arquivos não executáveis
+	# Passo 5: Modificando as permissões de arquivos não executáveis
 
 	generateProgressNum;
 	echo "# Modifying permissions of non-executable files";
-	2>/tmp/quick-deb-builder.log echo "${non_executable_files[*]}" | xargs chmod 0644; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
+	echo "${non_executable_files[*]}" | xargs chmod 0644 2>/tmp/quick-deb-builder.log; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 		verify_installation_process_sucess;
 
-	# Passo 7: Modificando as permissões do diretório de controle do pacote deb
+	# Passo 6: Modificando as permissões do diretório de controle do pacote deb
 
 	generateProgressNum;
 	echo "# Modifying permissions of the files in DEBIAN directory";
@@ -157,37 +146,37 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 		verify_installation_process_sucess;
 
 	#### Os 6 próximos passos não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
-	# Passo 8: Verificando e modificando as permissões do arquivo md5sums na pasta de controle do pacote deb
+	# Passo 7: Verificando e modificando as permissões do arquivo md5sums na pasta de controle do pacote deb
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of the md5sums file";
 	2>/dev/null chmod 0644 /tmp/deb_packing/DEBIAN/md5sums || 2>/dev/null chmod 0644 /tmp/deb_packing/debian/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
 
-	# Passo 9: Verificando e modificando as permissões dos arquivos de sudoers na pasta
+	# Passo 8: Verificando e modificando as permissões dos arquivos de sudoers na pasta
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of files in the sudoers folder";
 	2>/dev/null find /tmp/deb_packing/etc/sudoers.d/ -type f -exec chmod 0440 {} \; # Dá permissões r--r----- para todos os arquivos que estiverem na pasta /etc/sudoers.d, caso existam
 
-	# Passo 10: Verificando e modificando as permissões dos arquivos de documentação na pasta
+	# Passo 9: Verificando e modificando as permissões dos arquivos de documentação na pasta
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of documentation files in the folder";
 	2>/dev/null find /tmp/deb_packing/usr/share/doc/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software /tmp/deb_packing/usr/share/man/ 
 
-	# Passo 11: Verificando e modificando as permissões dos arquivos de manual na pasta
+	# Passo 10: Verificando e modificando as permissões dos arquivos de manual na pasta
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of man files in the folder";
 	2>/dev/null find /tmp/deb_packing/usr/share/man/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à manuais de usuário (man files)
 
-	# Passo 12: Verificando e modificando as permissões dos arquivos .xml
+	# Passo 11: Verificando e modificando as permissões dos arquivos .xml
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .xml files";
 	2>/dev/null find /tmp/deb_packing -type f -name "*.xml" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".xml"
 
-	# Passo 13: Verificando e modificando as permissões dos arquivos .html
+	# Passo 12: Verificando e modificando as permissões dos arquivos .html
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .xml files";
@@ -199,7 +188,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	echo "# Verifying and modifying permissions of .desktop files";
 	2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
-	# Passo 15: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
+	# Passo 14: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
 
 	generateProgressNum;
 	echo "# Modifying permissions of files in 'bin' folders";
@@ -207,14 +196,14 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	#### FIM DA BUSCA ####
 
-	# Passo 16: Empacotando arquivos
+	# Passo 15: Empacotando arquivos
 
 	generateProgressNum;
 	echo "# Packaging files";
 	DPKG_DEB_OUTPUT=$(2>/tmp/quick-deb-builder.log dpkg-deb -b /tmp/deb_packing "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
 		verify_installation_process_sucess;
 
-	# Passo 17: Mudando proprietário do arquivo .deb de "root" para usuário atual
+	# Passo 16: Mudando proprietário do arquivo .deb de "root" para usuário atual
 
 	generateProgressNum;
 	echo "# Changing owner of the .deb file";
@@ -223,7 +212,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	2>/tmp/quick-deb-builder.log chown "$CURRENT_USER": "$DEB_PACKAGE_CREATED_NAME"; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo
 		verify_installation_process_sucess;
 
-	# Passo 18: Removendo arquivos temporários
+	# Passo 17: Removendo arquivos temporários
 
 	generateProgressNum;
 	echo "# Removing temporary files";
@@ -307,6 +296,38 @@ verifyReturnCode()
 			return 1; # return 1
 		fi
 	fi
+}
+
+list_executable_files()
+{
+	local executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta pra variável local
+	local old_IFS=$IFS; # IFS: Processa string de variáveis com separador definido para variável "array"
+	IFS=$'\n'; # define separador (quebra de linha) para array
+	local executable_files_list=($(echo "$executable_files_tmp")); # array temporária / variável LOCAL
+	IFS=$old_IFS;
+
+	local counter=0; # contador adicional para o for
+	for executable_file in "${executable_files_list[@]}"
+	do
+		executable_files[$counter]=$(echo "$executable_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
+		counter=$((counter+1));
+	done
+}
+
+list_non_executable_files()
+{
+	local non_executable_files_tmp=$(2>/tmp/quick-deb-builder.log find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta pra variável local
+	local old_IFS=$IFS; # IFS: Processa string de variáveis com separador definido para variável "array"
+	IFS=$'\n'; # define separador (quebra de linha) para array
+	local non_executable_files_list=($(echo "$non_executable_files_tmp")); # array temporária / variável LOCAL
+	IFS=$old_IFS;
+
+	local counter=0; # contador adicional para o for
+	for non_executable_file in "${non_executable_files_list[@]}"
+	do
+		non_executable_files[$counter]=$(echo "$non_executable_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
+		counter=$((counter+1));
+	done
 }
 
 verify_installation_process_sucess()

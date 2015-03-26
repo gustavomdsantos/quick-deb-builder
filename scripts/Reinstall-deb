@@ -1,0 +1,18 @@
+#! /bin/bash
+
+# Reinstall-deb: Automatizate the uninstallation, DEB package creation and 
+# instalation of Quick DEB Builder in his latest version.
+# It puts the .deb file in "Área de Trabalho" folder.
+#
+# Author: Gustavo Moraes <gustavosotnas@gmail.com>
+#
+# This file is subject to the terms and conditions of the GNU General Public
+# License. See the file COPYING in the main directory of this archive
+# for more details.
+
+sudo apt-get purge -y quick-deb-builder
+echo -e "\033[1;34m\n\nO comando 'apt-get' retornou $?\n\n\033[0m";
+sudo ./Makefile-deb "$USER" ../quick-deb-builder/ /home/"$USER"/Área\ de\ Trabalho/
+echo -e "\033[1;34m\n\nO comando 'Makefile-deb' retornou $?\n\n\033[0m";
+sudo dpkg -i /home/"$USER"/Área\ de\ Trabalho/quick-deb-builder*.deb
+echo -e "\033[1;34m\n\nO comando 'dpkg' retornou $?\n\n\033[0m";
