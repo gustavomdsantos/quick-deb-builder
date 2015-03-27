@@ -13,7 +13,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.0.3"
+VERSION="1.0.4"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -176,22 +176,23 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	2>/dev/null find /tmp/deb_packing/usr/share/man/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à manuais de usuário (man files)
 
 	# Passo 11: Verificando e modificando as permissões dos arquivos .xml
+	# (`printf '%s\n' "${all_files[@]}"` imprime cada um dos elementos do array em uma linha)
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .xml files";
-	2>/dev/null echo "${all_files[*]}" | grep ".xml" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".xml"
+	2>/dev/null printf '%s\n' "${all_files[@]}" | grep ".xml" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".xml"
 
 	# Passo 12: Verificando e modificando as permissões dos arquivos .html
 
 	generateProgressNum;
-	echo "# Verifying and modifying permissions of .xml files";
-	2>/dev/null echo "${all_files[*]}" | grep ".html" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".html"
+	echo "# Verifying and modifying permissions of .html files";
+	2>/dev/null printf '%s\n' "${all_files[@]}" | grep ".html" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".html"
 
 	# Passo 13: Verificando e modificando as permissões dos arquivos .desktop
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .desktop files";
-	2>/dev/null echo "${all_files[*]}" | grep ".desktop" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
+	2>/dev/null printf '%s\n' "${all_files[@]}" | grep ".desktop" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
 	# Passo 14: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
 
