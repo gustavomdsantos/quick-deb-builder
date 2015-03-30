@@ -13,7 +13,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.0.4"
+VERSION="1.0.5"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
@@ -155,7 +155,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	# Passo 7: Verificando e modificando as permissões do diretório de temas do "BURG bootloader"
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of the BURG bootloader themes directory";
-	2>/dev/null find /tmp/deb_packing/boot/burg/themes/ -type d | xargs chmod 700 2>/dev/null; # Dá permissões rwx------ para a pasta themes e seus subdiretórios
+	2>/dev/null find /tmp/deb_packing/boot/burg/themes/ -type d | xargs chmod 755 2>/dev/null; # Dá permissões rwxr-xr-x para a pasta themes e seus subdiretórios
 
 	# Passo 8: Verificando e modificando as permissões dos arquivos de sudoers na pasta
 
