@@ -5,21 +5,45 @@
 # This file is subject to the terms and conditions of the GNU General Public
 # License. See the file COPYING in the main directory of this archive
 # for more details.
-
+#
 # Parâmetros obrigatórios que o "/usr/bin/quick-deb-builder" passa:
 # 	$1=$HOME - Caminho da pasta inicial do usuário comum
 #	$2=$USER - Nome do usuário comum
+#	$3=$OPTION - Opções informativas do programa (--about --help -h)
+# OU
+#	$3=$INPUT_PATH - Pasta de origem (source do software) a ser criado o pacote deb
+#	$4=$OUTPUT_PATH - Pasta de destino do pacote deb
 
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.0.5"
+VERSION="1.1.0-nightly"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2"
 true=1; false=0; # boolean
 
-main()
+init()
+{
+# Próximas 4 linhas: implementar na versão 1.2.0
+#	if find "$3" && find "$4" # Se os dois parâmetros existem e são caminhos de arquivo válidos
+#	then # O usuário quer usar o 'quick-deb-builder' em linha de comando (CLI)
+#		main_CLI "$3" "$4";
+#	else
+		case "$3" in
+			"-h" )
+				quick-deb-builder-helper.sh --help;; # Esse "--help" é DIFERENTE de "about", este último abre uma janela em GUI!
+			"--help" )
+				quick-deb-builder-helper.sh --help;; # O mesmo do "case" anterior /\ /\ /\
+			"--version" )
+				quick-deb-builder-helper.sh --version;; # Exibe a versão do programa
+			*)
+				main_GUI "$3";; # Executa as funcionalidades principais do programa em GUI
+		esac
+#	fi
+}
+
+main_GUI()
 {
 	verify_GUI;
 
@@ -31,6 +55,10 @@ main()
 	done
 	dialog_deb_creation_sucess;
 }
+
+#main_CLI(){
+	# A implementar na versão 1.2.0
+#}
 
 verify_GUI()
 {
@@ -436,4 +464,4 @@ generateReturnCode()
 	return $1;
 }
 
-main $@; # Repassa os parâmetros de linha de comando para a função
+init $@; # Repassa os parâmetros de linha de comando para a função

@@ -11,11 +11,11 @@
 #	100 = "No" para fechar
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.0.5"
+VERSION="1.1.0-nightly"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree. It automatically solves most common permission problems for files and directories in creating .deb packages."
 
-displayAboutDialog()
+displayAboutDialog_GUI()
 {
 	yad --title "About $APP_NAME" --info --center --width=480 --image="package" --window-icon="package" --icon-name="package" --text "<b>$APP_NAME</b>\n\n$VERSION\n\n$HELP_DESCRIPTION_TEXT <b>$ADVICE_DESCRIPTION_TEXT</b>\n\n\n$APP_AUTHOR" --text-align=center --borders=5 --button=Close:0;
 }
@@ -47,7 +47,9 @@ verify_safe_exit()
 }
 
 case $1 in
-	"about") displayAboutDialog;; # Abre uma janela de diálogo "sobre"
-	"cancel") displayCancelDialog; verify_term_all;; # Interrompe todos os processos relacionados ao AVD Launcher
+	"about") displayAboutDialog_GUI;; # Abre uma janela de diálogo "sobre" com uma pequena ajuda de utilização do programa em GUI ("help")
+	"--help") displayHelp_CLI;; # Escreve na saída padrão (Terminal) uma ajuda de utilização do programa para CLI
+	"--version") displayVersion_CLI;; # Escreve na saída padrão (Terminal) a versão do aplicativo para informação
+	"cancel") displayCancelDialog; verify_term_all;; # Interrompe todos os processos relacionados ao programa
 	"safe-exit") displayCancelDialog; verify_safe_exit;;
 esac;
