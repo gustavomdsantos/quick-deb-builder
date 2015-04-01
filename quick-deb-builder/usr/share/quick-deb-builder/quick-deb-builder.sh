@@ -126,7 +126,7 @@ format_folder_paths()
 
 dcreate() # Procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas
 {
-	NUM_STEPS=20; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
+	NUM_STEPS=19; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
 	# * "2>>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
 
 	# Passo 1: Copiando pasta para empacotamento para a pasta temporária (/tmp/)
@@ -142,27 +142,21 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	list_all_files; # cria a variável do tipo "array": "${ALL_FILES[*]}"
 		verify_installation_process_sucess;
 
-	# Passo 3: Criar arquivo md5sums
-	generateProgressNum;
-	echo "# Creating md5sums file";
-	2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' | 2>>/tmp/quick-deb-builder.log xargs md5sum > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Cria o arquivo md5sums
-		verify_installation_process_sucess;
-
-	# Passo 4: Verificando existência de arquivos executáveis (mimetype "aplication/...") na pasta
+	# Passo 3: Verificando existência de arquivos executáveis (mimetype "aplication/...") na pasta
 
 	generateProgressNum;
 	echo "# Checking existence of executable files in the folder";
 	list_executable_files; # cria a variável do tipo "array": "${EXECUTABLE_FILES[*]}"
 		verify_installation_process_sucess;
 
-	# Passo 5: Verificando existência de arquivos não-executáveis (mimetype != "aplication/...") na pasta
+	# Passo 4: Verificando existência de arquivos não-executáveis (mimetype != "aplication/...") na pasta
 
 	generateProgressNum;
 	echo "# Checking existence of non-executable files in the folder";
 	list_non_executable_files; # cria a variável do tipo "array": "${NON_EXECUTABLE_FILES[*]}"
 		verify_installation_process_sucess;
 
-	# Passo 6: Modificando as permissões de arquivos executáveis
+	# Passo 5: Modificando as permissões de arquivos executáveis
 
 	generateProgressNum;
 	echo "# Modifying permissions of executable files";
@@ -172,7 +166,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 			verify_installation_process_sucess;
 	fi
 
-	# Passo 7: Modificando as permissões de arquivos não executáveis
+	# Passo 6: Modificando as permissões de arquivos não executáveis
 
 	generateProgressNum;
 	echo "# Modifying permissions of non-executable files";
@@ -184,49 +178,48 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	#### Os 6 próximos passos não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
 
-	# Passo 8: Verificando e modificando as permissões do diretório de temas do "BURG bootloader"
+	# Passo 7: Verificando e modificando as permissões do diretório de temas do "BURG bootloader"
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of the BURG bootloader themes directory";
 	2>/dev/null find /tmp/deb_packaging/boot/burg/themes/ -type d | xargs chmod 755 2>/dev/null; # Dá permissões rwxr-xr-x para a pasta themes e seus subdiretórios
 
-	# Passo 9: Verificando e modificando as permissões dos arquivos de sudoers na pasta
+	# Passo 8: Verificando e modificando as permissões dos arquivos de sudoers na pasta
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of files in the sudoers folder";
 	2>/dev/null find /tmp/deb_packaging/etc/sudoers.d/ -type f -exec chmod 0440 {} \; # Dá permissões r--r----- para todos os arquivos que estiverem na pasta /etc/sudoers.d, caso existam
 
-	# Passo 10: Verificando e modificando as permissões dos arquivos de documentação na pasta
+	# Passo 9: Verificando e modificando as permissões dos arquivos de documentação na pasta
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of documentation files in the folder";
 	2>/dev/null find /tmp/deb_packaging/usr/share/doc/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software /tmp/deb_packaging/usr/share/man/ 
 
-	# Passo 11: Verificando e modificando as permissões dos arquivos de manual na pasta
+	# Passo 10: Verificando e modificando as permissões dos arquivos de manual na pasta
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of man files in the folder";
 	2>/dev/null find /tmp/deb_packaging/usr/share/man/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à manuais de usuário (man files)
 
-	# Passo 12: Verificando e modificando as permissões dos arquivos .xml
-	# (`printf '%s\n' "${ALL_FILES[@]}"` imprime cada um dos elementos do array em uma linha)
+	# Passo 11: Verificando e modificando as permissões dos arquivos .xml
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .xml files";
-	2>/dev/null printf '%s\n' "${ALL_FILES[@]}" | grep ".xml" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".xml"
+	chmod_all_by_extension xml -x; # Retira permissões de execução (x) para todos os arquivos ".xml"
 
-	# Passo 13: Verificando e modificando as permissões dos arquivos .html
+	# Passo 12: Verificando e modificando as permissões dos arquivos .html
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .html files";
-	2>/dev/null printf '%s\n' "${ALL_FILES[@]}" | grep ".html" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".html"
+	chmod_all_by_extension html -x; # Retira permissões de execução (x) para todos os arquivos ".html"
 
-	# Passo 14: Verificando e modificando as permissões dos arquivos .desktop
+	# Passo 13: Verificando e modificando as permissões dos arquivos .desktop
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .desktop files";
-	2>/dev/null printf '%s\n' "${ALL_FILES[@]}" | grep ".desktop" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
+	chmod_all_by_extension desktop -x; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
-	# Passo 15: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
+	# Passo 14: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
 
 	generateProgressNum;
 	echo "# Modifying permissions of files in 'bin' folders";
@@ -234,30 +227,30 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	#### FIM DA BUSCA ####
 
-	# Passo 16: Modificando as permissões do diretório de controle do pacote deb
+	# Passo 15: Modificando as permissões do diretório de controle do pacote deb
 
 	generateProgressNum;
 	echo "# Modifying permissions of the files in DEBIAN directory";
 	2>>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 		verify_installation_process_sucess;
 
-	#### O próximo passo não precisa de gerar log, é comando de busca pelo arquivo "md5sums", não obrigatório no pacote:
-	# Passo 17: Verificando e modificando as permissões do arquivo md5sums na pasta de controle do pacote deb
-
+	# Passo 16: Criar arquivo md5sums
 	generateProgressNum;
-	echo "# Verifying permissions and modifying md5sums file";
-	local md5sums_file=$(cat /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums);
-	echo "${md5sums_file//\/tmp\/deb_packaging\//}" > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums;
+	echo "# Creating md5sums file";
+	2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' | 2>>/tmp/quick-deb-builder.log xargs md5sum > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Cria o arquivo md5sums
+		verify_installation_process_sucess;
+	local md5sums_file=$(cat /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums); # Abre o arquivo "md5sums" para uma variável local
+	echo "${md5sums_file//\/tmp\/deb_packaging\//}" > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Retira os "/tmp/deb_packaging" do "md5sums"
 	2>/dev/null chmod 0644 /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
 
-	# Passo 18: Empacotando arquivos
+	# Passo 17: Empacotando arquivos
 
 	generateProgressNum;
 	echo "# Packaging files";
 	DPKG_DEB_OUTPUT=$(2>>/tmp/quick-deb-builder.log dpkg-deb -b /tmp/deb_packaging "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
 		verify_installation_process_sucess;
 
-	# Passo 19: Mudando proprietário do arquivo .deb de "root" para usuário atual
+	# Passo 18: Mudando proprietário do arquivo .deb de "root" para usuário atual
 
 	generateProgressNum;
 	echo "# Changing owner of the .deb file";
@@ -266,7 +259,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	2>>/tmp/quick-deb-builder.log chown "$CURRENT_USER": "$DEB_PACKAGE_CREATED_NAME"; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo
 		verify_installation_process_sucess;
 
-	# Passo 20: Removendo arquivos temporários
+	# Passo 19: Removendo arquivos temporários
 
 	generateProgressNum;
 	echo "# Removing temporary files";
@@ -412,6 +405,15 @@ list_non_executable_files()
 		NON_EXECUTABLE_FILES[$counter]=$(echo "$non_executable_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
 		counter=$((counter+1));
 	done
+}
+
+# Usage: chmod_all_by_extension [MODE] [EXTENSION]
+#        chmod_all_by_extension [OCTAL-MODE] [EXTENSION]
+chmod_all_by_extension()
+{
+	local mode="$2";
+	local extension="$1";
+	2>/dev/null printf '%s\n' "${ALL_FILES[@]}" | grep ".$extension" | xargs chmod "$mode" 2>/dev/null; # (`printf '%s\n' "${ALL_FILES[@]}"` imprime cada um dos elementos do array em uma linha)
 }
 
 verify_installation_process_sucess()
