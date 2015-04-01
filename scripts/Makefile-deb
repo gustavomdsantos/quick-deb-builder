@@ -11,10 +11,10 @@
 # License. See the file COPYING in the main directory of this archive
 # for more details.
 
-cp -R "$2" /tmp/deb_packing; # Copia a pasta do pacote para a pasta temporária	
+cp -R "$2" /tmp/deb_packaging; # Copia a pasta do pacote para a pasta temporária	
 
-executable_files_tmp=$(find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta
-non_executable_files_tmp=$(find /tmp/deb_packing -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta
+executable_files_tmp=$(find /tmp/deb_packaging -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta
+non_executable_files_tmp=$(find /tmp/deb_packaging -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta
 
 old_IFS=$IFS;
 IFS=$'\n'; # define separador (quebra de linha) para array
@@ -26,14 +26,16 @@ echo "${executable_files[*]}" | xargs chmod 0755; # Dá permissões rwxr-xr-x pa
 echo "${non_executable_files[*]}" | xargs chmod 0644 ; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 
 # As 4 próximas linhas não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
-2>/dev/null chmod 0644 /tmp/deb_packing/DEBIAN/md5sums || 2>/dev/null chmod 0644 /tmp/deb_packing/debian/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
-2>/dev/null find /tmp/deb_packing/etc/sudoers.d/ -type f -exec chmod 0440 {} \; # Dá permissões r--r----- para todos os arquivos que estiverem na pasta /etc/sudoers.d, caso existam
-2>/dev/null /tmp/deb_packing/usr/share/doc/ /tmp/deb_packing/usr/share/man/ -type f -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software
-2>/dev/null find /tmp/deb_packing -type f -name "*.desktop" -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
+2>/dev/null find /tmp/deb_packaging/etc/sudoers.d/ -type f -exec chmod 0440 {} \; # Dá permissões r--r----- para todos os arquivos que estiverem na pasta /etc/sudoers.d, caso existam
+2>/dev/null /tmp/deb_packaging/usr/share/doc/ /tmp/deb_packaging/usr/share/man/ -type f -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos relacionados à documentação do software
+2>/dev/null find /tmp/deb_packaging -type f -name "*.desktop" -exec chmod -x {} \; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
+2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -print0 | 2>>/tmp/quick-deb-builder.log xargs -0 md5sum > /tmp/deb_packaging/DEBIAN/md5sums; # Cria o arquivo md5sums
+md5sums_file=$(cat /tmp/deb_packaging/DEBIAN/md5sums); # Abre o arquivo "md5sums" para uma variável local
+echo "${md5sums_file//\/tmp\/deb_packaging\//}" > /tmp/deb_packaging/DEBIAN/md5sums; # Retira os "/tmp/deb_packaging" do "md5sums"
+2>/dev/null chmod 0644 /tmp/deb_packaging/DEBIAN/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
 
-
-#chown -R root: /tmp/deb_packing; # sudo Não vai pedir senha por causa do "sudoers.d"
-DPKG_DEB_OUTPUT=$(dpkg-deb -b /tmp/deb_packing "$3"); # sudo
+#chown -R root: /tmp/deb_packaging; # sudo Não vai pedir senha por causa do "sudoers.d"
+DPKG_DEB_OUTPUT=$(dpkg-deb -b /tmp/deb_packaging "$3"); # sudo
 echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4 | sed 's/ \+/\\ /g' | xargs chown "$1":;
 
-rm -R /tmp/deb_packing;
+rm -R /tmp/deb_packaging;
