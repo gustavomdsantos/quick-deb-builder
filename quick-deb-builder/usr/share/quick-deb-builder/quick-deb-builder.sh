@@ -6,7 +6,7 @@
 # License. See the file COPYING in the main directory of this archive
 # for more details.
 #
-# Parâmetros obrigatórios que o "/usr/bin/quick-deb-builder" passa:
+# Parâmetros OBRIGATÓRIOS que o "/usr/bin/quick-deb-builder" passa:
 # 	$1=$HOME - Caminho da pasta inicial do usuário comum
 #	$2=$USER - Nome do usuário comum
 #	$3=$OPTION - Opções informativas do programa (--about --help -h)
@@ -17,7 +17,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.1.1"
+VERSION="1.1.2-nightly"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2" # $2 - Parâmetro que o "../bin/quick-deb-builder" sempre passa para este (executado como root a variável "$USER" == "root")
@@ -145,13 +145,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	# Passo 3: Criar arquivo md5sums
 	generateProgressNum;
 	echo "# Creating md5sums file";
-	if find /tmp/deb_packaging/DEBIAN > /dev/null
-	then # O nome da pasta de controle do pacote é "DEBIAN" (maiúsculas)
-		local debian_folder="DEBIAN"; # Define variável local com o nome da pasta (será usada nos próximos passos para evitar fazer várias estruturas condicionais)
-	else # O nome da pasta de controle do pacote é "DEBIAN" (maiúsculas)
-		local debian_folder="debian";
-	fi
-	2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' | 2>>/tmp/quick-deb-builder.log xargs md5sum > /tmp/deb_packaging/"$debian_folder"/md5sums; # Cria o arquivo md5sums
+	2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' | 2>>/tmp/quick-deb-builder.log xargs md5sum > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Cria o arquivo md5sums
 		verify_installation_process_sucess;
 
 	# Passo 4: Verificando existência de arquivos executáveis (mimetype "aplication/...") na pasta
@@ -244,7 +238,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	generateProgressNum;
 	echo "# Modifying permissions of the files in DEBIAN directory";
-	2>>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packaging/"$debian_folder"; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
+	2>>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 		verify_installation_process_sucess;
 
 	#### O próximo passo não precisa de gerar log, é comando de busca pelo arquivo "md5sums", não obrigatório no pacote:
@@ -252,9 +246,9 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	generateProgressNum;
 	echo "# Verifying permissions and modifying md5sums file";
-	local md5sums_file=$(cat /tmp/deb_packaging/"$debian_folder"/md5sums);
-	echo "${md5sums_file//\/tmp\/deb_packaging\//}" > /tmp/deb_packaging/"$debian_folder"/md5sums;
-	2>/dev/null chmod 0644 /tmp/deb_packaging/"$debian_folder"/md5sums # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
+	local md5sums_file=$(cat /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums);
+	echo "${md5sums_file//\/tmp\/deb_packaging\//}" > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums;
+	2>/dev/null chmod 0644 /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
 
 	# Passo 18: Empacotando arquivos
 
@@ -422,21 +416,26 @@ verify_installation_process_sucess()
 
 verify_deb_structure()
 {
-	if find "${PACKAGE_PATHS[0]}/DEBIAN" > /dev/null || find "${PACKAGE_PATHS[0]}/debian" > /dev/null
-	then
-		ISTHERE_DEBIAN_FOLDER=$true; # echo "A pasta DEBIAN existe!";
+	if find "${PACKAGE_PATHS[0]}/DEBIAN" > /dev/null
+	then # O nome da pasta de controle do pacote é "DEBIAN" (maiúsculas)
+		DEBIAN_FOLDER_ALIAS="DEBIAN"; # Define variável local com o nome da pasta (será usada nos próximos passos para evitar fazer várias estruturas condicionais)
+		local ISTHERE_DEBIAN_FOLDER=$true; # A pasta DEBIAN existe!
+	elif find "${PACKAGE_PATHS[0]}/debian" > /dev/null
+	then # O nome da pasta de controle do pacote é "DEBIAN" (minúsculas)
+		DEBIAN_FOLDER_ALIAS="debian"; # Define variável local com o nome da pasta (será usada nos próximos passos para evitar fazer várias estruturas condicionais)
+		local ISTHERE_DEBIAN_FOLDER=$true; # A pasta DEBIAN existe!
 	else
-		ISTHERE_DEBIAN_FOLDER=$false; # echo "A pasta DEBIAN NÃO existe!";
+		local ISTHERE_DEBIAN_FOLDER=$false; # A pasta DEBIAN NÃO existe!
 	fi
 
 	if find "${PACKAGE_PATHS[0]}/DEBIAN/control" > /dev/null || find "${PACKAGE_PATHS[0]}/debian/control" > /dev/null
 	then
-		ISTHERE_CONTROL_FILE=$true; # echo "O arquivo de controle existe!";
+		local ISTHERE_CONTROL_FILE=$true; # O arquivo de controle existe!
 	else
-		ISTHERE_CONTROL_FILE=$false; # echo "O arquivo de controle NÃO existe."
+		local ISTHERE_CONTROL_FILE=$false; # O arquivo de controle NÃO existe
 	fi
 
-	if [ $ISTHERE_DEBIAN_FOLDER -eq $true ]	&& [ $ISTHERE_CONTROL_FILE -eq $true ]
+	if [ $ISTHERE_DEBIAN_FOLDER ] && [ $ISTHERE_CONTROL_FILE ] # Existe a pasta "DEBIAN"? Existe o arquivo de controle?
 	then
 		return 0; # É um pacote deb válido
 	else
