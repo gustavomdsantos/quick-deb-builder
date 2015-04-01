@@ -6,23 +6,38 @@
 # License. See the file COPYING in the main directory of this archive
 # for more details.
 
-# RETURN CODES personalizados do AVD Launcher:
+# RETURN CODES personalizados do Quick DEB Builder:
 # 	50 = "Yes" para fechar
 #	100 = "No" para fechar
 
 APP_NAME="Quick DEB Builder"
+CMD_NAME="quick-deb-builder"
 VERSION="1.1.0-nightly"
-APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
-HELP_DESCRIPTION_TEXT="$APP_NAME is a simple tool that quickly creates .deb packages from an existing build tree. It automatically solves most common permission problems for files and directories in creating .deb packages."
+APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes <http://about.me/gustavosotnas>"
+APP_HOMEPAGE="https://github.com/gustavosotnas/quick-deb-builder"
 
 displayAboutDialog_GUI()
 {
-	yad --title "About $APP_NAME" --info --center --width=480 --image="package" --window-icon="package" --icon-name="package" --text "<b>$APP_NAME</b>\n\n$VERSION\n\n$HELP_DESCRIPTION_TEXT <b>$ADVICE_DESCRIPTION_TEXT</b>\n\n\n$APP_AUTHOR" --text-align=center --borders=5 --button=Close:0;
+	yad --title "About $APP_NAME" --info --center --width=480 --image="package" --window-icon="package" --icon-name="package" --text "<b>$APP_NAME</b>\n\n$VERSION\n\n$HELP_DESCRIPTION_TEXT_LINE1 <b>$ADVICE_DESCRIPTION_TEXT</b>\n\n\n$APP_AUTHOR" --text-align=center --borders=5 --button=Close:0;
 }
 
 displayHelp_CLI()
 {
-	echo "Entrou no Help";
+	echo; # Imprime apenas um '\n'
+	echo -n "Usage"; echo -n ":"; echo " $CMD_NAME";
+	echo -n "   or"; echo -n ":"; echo -n " $CMD_NAME ["; echo -n "OPTION"; echo "]...";
+	echo;
+	echo "$APP_NAME is a simple tool that quickly creates .deb packages";
+	echo "from an existing build tree. It automatically solves most common";
+	echo "permission problems for files and directories in creating .deb packages.";
+	echo;
+	echo -n "Options"; echo ":";
+	echo -n "  -h, --help			"; echo "Display this help and exit";
+	echo -n "      --version			"; echo "Shows version information and exit";
+	echo;
+	echo "Report $CMD_NAME bugs to <$APP_HOMEPAGE>";
+	echo "Released under the GNU General Public License."
+	echo "$APP_AUTHOR";
 }
 
 displayVersion_CLI()
