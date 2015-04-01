@@ -17,7 +17,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.1.0-nightly"
+VERSION="1.1.0"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2" # $2 - Parâmetro que o "../bin/quick-deb-builder" sempre passa para este (executado como root a variável "$USER" == "root")
@@ -36,7 +36,7 @@ init()
 			"--version" )
 				./quick-deb-builder-helper.sh --version;; # Exibe a versão do programa
 			*)
-				main_GUI "$3";; # Executa as funcionalidades principais do programa em GUI
+				main_GUI "$1";; # Executa as funcionalidades principais do programa em GUI
 		esac
 #	fi
 }
