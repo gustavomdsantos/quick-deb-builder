@@ -237,7 +237,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	# Passo 16: Criar arquivo md5sums
 	generateProgressNum;
 	echo "# Creating md5sums file";
-	2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' | 2>>/tmp/quick-deb-builder.log xargs md5sum > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Cria o arquivo md5sums
+	2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -print0 | 2>>/tmp/quick-deb-builder.log xargs -0 md5sum > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Cria o arquivo md5sums
 		verify_installation_process_sucess;
 	local md5sums_file=$(cat /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums); # Abre o arquivo "md5sums" para uma variável local
 	echo "${md5sums_file//\/tmp\/deb_packaging\//}" > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Retira os "/tmp/deb_packaging" do "md5sums"
