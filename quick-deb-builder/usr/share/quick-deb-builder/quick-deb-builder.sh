@@ -32,9 +32,9 @@ init()
 #	else
 		case "$3" in
 			"-h"|"--help" )
-				quick-deb-builder-helper.sh --help;; # Esse "--help" é DIFERENTE de "about", este último abre uma janela em GUI!
+				./quick-deb-builder-helper.sh --help;; # Esse "--help" é DIFERENTE de "about", este último abre uma janela em GUI!
 			"--version" )
-				quick-deb-builder-helper.sh --version;; # Exibe a versão do programa
+				./quick-deb-builder-helper.sh --version;; # Exibe a versão do programa
 			*)
 				main_GUI "$3";; # Executa as funcionalidades principais do programa em GUI
 		esac
