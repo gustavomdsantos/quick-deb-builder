@@ -139,7 +139,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	# Passo 2: Listando todos os arquivos na pasta
 	generateProgressNum; # Porcentagem de progresso na janela
 	echo "# Listing all files"; # Texto da janela (começa com '# ')
-	list_all_files; # cria a variável do tipo "array": "${all_files[*]}"
+	list_all_files; # cria a variável do tipo "array": "${ALL_FILES[*]}"
 		verify_installation_process_sucess;
 
 	# Passo 3: Criar arquivo md5sums
@@ -152,23 +152,23 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	generateProgressNum;
 	echo "# Checking existence of executable files in the folder";
-	list_executable_files; # cria a variável do tipo "array": "${executable_files[*]}"
+	list_executable_files; # cria a variável do tipo "array": "${EXECUTABLE_FILES[*]}"
 		verify_installation_process_sucess;
 
 	# Passo 5: Verificando existência de arquivos não-executáveis (mimetype != "aplication/...") na pasta
 
 	generateProgressNum;
 	echo "# Checking existence of non-executable files in the folder";
-	list_non_executable_files; # cria a variável do tipo "array": "${non_executable_files[*]}"
+	list_non_executable_files; # cria a variável do tipo "array": "${NON_EXECUTABLE_FILES[*]}"
 		verify_installation_process_sucess;
 
 	# Passo 6: Modificando as permissões de arquivos executáveis
 
 	generateProgressNum;
 	echo "# Modifying permissions of executable files";
-	if [ -n "$executable_files" ] # Se a variável "executable_files" NÃO é nula
+	if [ -n "$EXECUTABLE_FILES" ] # Se a variável "EXECUTABLE_FILES" NÃO é nula
 	then
-		echo "${executable_files[*]}" | xargs chmod 0755 2>>/tmp/quick-deb-builder.log; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
+		echo "${EXECUTABLE_FILES[*]}" | xargs chmod 0755 2>>/tmp/quick-deb-builder.log; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
 			verify_installation_process_sucess;
 	fi
 
@@ -176,9 +176,9 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	generateProgressNum;
 	echo "# Modifying permissions of non-executable files";
-	if [ -n "$non_executable_files" ] # Se a variável "executable_files" NÃO é nula
+	if [ -n "$NON_EXECUTABLE_FILES" ] # Se a variável "NON_EXECUTABLE_FILES" NÃO é nula
 	then
-		echo "${non_executable_files[*]}" | xargs chmod 0644 2>>/tmp/quick-deb-builder.log; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
+		echo "${NON_EXECUTABLE_FILES[*]}" | xargs chmod 0644 2>>/tmp/quick-deb-builder.log; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
 			verify_installation_process_sucess;
 	fi
 
@@ -208,23 +208,23 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	2>/dev/null find /tmp/deb_packaging/usr/share/man/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à manuais de usuário (man files)
 
 	# Passo 12: Verificando e modificando as permissões dos arquivos .xml
-	# (`printf '%s\n' "${all_files[@]}"` imprime cada um dos elementos do array em uma linha)
+	# (`printf '%s\n' "${ALL_FILES[@]}"` imprime cada um dos elementos do array em uma linha)
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .xml files";
-	2>/dev/null printf '%s\n' "${all_files[@]}" | grep ".xml" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".xml"
+	2>/dev/null printf '%s\n' "${ALL_FILES[@]}" | grep ".xml" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".xml"
 
 	# Passo 13: Verificando e modificando as permissões dos arquivos .html
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .html files";
-	2>/dev/null printf '%s\n' "${all_files[@]}" | grep ".html" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".html"
+	2>/dev/null printf '%s\n' "${ALL_FILES[@]}" | grep ".html" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".html"
 
 	# Passo 14: Verificando e modificando as permissões dos arquivos .desktop
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .desktop files";
-	2>/dev/null printf '%s\n' "${all_files[@]}" | grep ".desktop" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
+	2>/dev/null printf '%s\n' "${ALL_FILES[@]}" | grep ".desktop" | xargs chmod -x 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
 	# Passo 15: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
 
@@ -248,7 +248,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	echo "# Verifying permissions and modifying md5sums file";
 	local md5sums_file=$(cat /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums);
 	echo "${md5sums_file//\/tmp\/deb_packaging\//}" > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums;
-	2>/dev/null chmod 0644 /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
+	2>/dev/null chmod 0644 /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
 
 	# Passo 18: Empacotando arquivos
 
@@ -352,7 +352,7 @@ verifyReturnCode()
 	fi
 }
 
-# Lista TODOS os arquivos da pasta "/tmp/deb_packaging" em um array de Strings: "${all_files[*]}"
+# Lista TODOS os arquivos da pasta "/tmp/deb_packaging" em um array de Strings: "${ALL_FILES[*]}"
 list_all_files()
 {
 	local all_files_tmp=$(2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f) # Lista todos os arquivos da pasta pra variável local
@@ -364,12 +364,12 @@ list_all_files()
 	local counter=0; # contador adicional para o for
 	for current_file in "${all_files_list[@]}"
 	do
-		all_files[$counter]=$(echo "$current_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
+		ALL_FILES[$counter]=$(echo "$current_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
 		counter=$((counter+1));
 	done
 }
 
-# Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta "/tmp/deb_packaging" em um array de Strings: "${executable_files[*]}"
+# Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta "/tmp/deb_packaging" em um array de Strings: "${EXECUTABLE_FILES[*]}"
 list_executable_files()
 {
 	local executable_files_tmp=$(2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta pra variável local
@@ -381,12 +381,12 @@ list_executable_files()
 	local counter=0; # contador adicional para o for
 	for executable_file in "${executable_files_list[@]}"
 	do
-		executable_files[$counter]=$(echo "$executable_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
+		EXECUTABLE_FILES[$counter]=$(echo "$executable_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
 		counter=$((counter+1));
 	done
 }
 
-# Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta "/tmp/deb_packaging" em um array de Strings: "${non_executable_files[*]}"
+# Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta "/tmp/deb_packaging" em um array de Strings: "${NON_EXECUTABLE_FILES[*]}"
 list_non_executable_files()
 {
 	local non_executable_files_tmp=$(2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta pra variável local
@@ -398,7 +398,7 @@ list_non_executable_files()
 	local counter=0; # contador adicional para o for
 	for non_executable_file in "${non_executable_files_list[@]}"
 	do
-		non_executable_files[$counter]=$(echo "$non_executable_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
+		NON_EXECUTABLE_FILES[$counter]=$(echo "$non_executable_file" | sed 's/ \+/\\ /g'); # array / variável GLOBAL (sed coloca "\" aonde estiver espaço no caminho do arquivo, para evitar quebra de nome de arquivo)
 		counter=$((counter+1));
 	done
 }
