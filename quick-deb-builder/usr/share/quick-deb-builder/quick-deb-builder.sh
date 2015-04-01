@@ -285,6 +285,17 @@ create_deb_package()
 	return $PIPESTATUS; # retorna o EXIT CODE do dcreate
 }
 
+dialog_deb_creation_sucess()
+{
+	local DEB_PACKAGE_CREATED_NAME=$(cat /tmp/quick-deb-builder.file); # Lê o nome do arquivo .deb criado (armazenado em arquivo)
+	yad --title "$APP_NAME" --info --center --width=350 --image="package" --window-icon="package" --icon-name="package" --text "<b>DEB package created sucessfully.</b>\n\nName of the created package:\n<tt>$DEB_PACKAGE_CREATED_NAME</tt>\n\n Do you want to open the package?" --text-align=center --button="No:1" --button="Yes:0";
+	if [ "$?" == "0" ]
+	then
+		xdg-open "$DEB_PACKAGE_CREATED_NAME";
+	fi
+	remove_temp_files;
+}
+
 #### FUNÇÕES AUXILIARES DO QUICK-DEB-BUILDER ####
 
 generateProgressNum() # Função para gerar o número do progresso da instalação (de acordo com o número de passos informado)
@@ -451,17 +462,6 @@ dialog_invalid_folder()
 dialog_deb_creation_error()
 {
 	cat /tmp/quick-deb-builder.log | yad --title "$APP_NAME" --text-info --center --width=500 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>An unexpected error occured in creating .deb package.</b></big>\n\nLog of the error:" --button="OK:0";
-	remove_temp_files;
-}
-
-dialog_deb_creation_sucess()
-{
-	local DEB_PACKAGE_CREATED_NAME=$(cat /tmp/quick-deb-builder.file); # Lê o nome do arquivo .deb criado (armazenado em arquivo)
-	yad --title "$APP_NAME" --info --center --width=350 --image="package" --window-icon="package" --icon-name="package" --text "<b>DEB package created sucessfully.</b>\n\nName of the created package:\n<tt>$DEB_PACKAGE_CREATED_NAME</tt>\n\n Do you want to open the package?" --text-align=center --button="No:1" --button="Yes:0";
-	if [ "$?" == "0" ]
-	then
-		xdg-open "$DEB_PACKAGE_CREATED_NAME";
-	fi
 	remove_temp_files;
 }
 
