@@ -31,10 +31,8 @@ init()
 #		main_CLI "$3" "$4";
 #	else
 		case "$3" in
-			"-h" )
+			"-h"|"--help" )
 				quick-deb-builder-helper.sh --help;; # Esse "--help" é DIFERENTE de "about", este último abre uma janela em GUI!
-			"--help" )
-				quick-deb-builder-helper.sh --help;; # O mesmo do "case" anterior /\ /\ /\
 			"--version" )
 				quick-deb-builder-helper.sh --version;; # Exibe a versão do programa
 			*)

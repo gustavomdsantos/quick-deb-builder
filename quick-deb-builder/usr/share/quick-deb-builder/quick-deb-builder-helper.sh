@@ -20,6 +20,16 @@ displayAboutDialog_GUI()
 	yad --title "About $APP_NAME" --info --center --width=480 --image="package" --window-icon="package" --icon-name="package" --text "<b>$APP_NAME</b>\n\n$VERSION\n\n$HELP_DESCRIPTION_TEXT <b>$ADVICE_DESCRIPTION_TEXT</b>\n\n\n$APP_AUTHOR" --text-align=center --borders=5 --button=Close:0;
 }
 
+displayHelp_CLI()
+{
+	echo "Entrou no Help";
+}
+
+displayVersion_CLI()
+{
+	echo "$VERSION";
+}
+
 displayCancelDialog()
 {
 	yad --title "$APP_NAME" --info --center --width=400 --image="help" --window-icon="package" --icon-name="package" --text "<big>Are you sure you want to exit from $APP_NAME?</big>" --text-align=center --button=No:1 --button=Yes:0;
