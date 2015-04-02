@@ -5,11 +5,11 @@
 # This file is subject to the terms and conditions of the GNU General Public
 # License. See the file COPYING in the main directory of this archive
 # for more details.
-#
-# Parâmetros OBRIGATÓRIOS que o "/usr/bin/quick-deb-builder" passa:
-# 	$1=$HOME - Caminho da pasta inicial do usuário comum
+
+# Parâmetros OBRIGATÓRIOS que o '/usr/bin/quick-deb-builder' passa:
+# 	$1=$HOME - Caminho da pasta inicial do usuário comum (não root - $HOME)
 #	$2=$USER - Nome do usuário comum
-#	$3=$OPTION - Opções informativas do programa (--about --help -h)
+#	$3=$OPTION - Opções informativas do programa (--version, --help, -h)
 # OU
 #	$3=$INPUT_PATH - Pasta de origem (source do software) a ser criado o pacote deb
 #	$4=$OUTPUT_PATH - Pasta de destino do pacote deb
@@ -23,6 +23,7 @@ HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory str
 CURRENT_USER="$2" # $2 - Parâmetro que o "../bin/quick-deb-builder" sempre passa para este (executado como root a variável "$USER" == "root")
 true=1; false=0; # boolean
 
+# Função que começa a execução do programa.
 init()
 {
 # Próximas 4 linhas: implementar na versão 1.2.0
@@ -41,6 +42,7 @@ init()
 #	fi
 }
 
+# Função principal do programa, em interface gráfica (GUI).
 main_GUI()
 {
 	verify_GUI;
@@ -58,6 +60,7 @@ main_GUI()
 	# A implementar na versão 1.2.0
 #}
 
+# Função que verifica a execução do aplicativo em interface gráfica.
 verify_GUI()
 {
 	if [ -n "$DISPLAY" ] # O script está sendo executado em interface gráfica
@@ -69,12 +72,15 @@ verify_GUI()
 	fi
 }
 
+# Função que define a pasta de origem e destino para a criação do pacote deb.
+# Parâmetros:
+# 	$1 - Caminho da pasta inicial do usuário comum (não root - $HOME)
 define_deb_IO_folder_paths()
 {
 	false; # Para entrar no while
 	while [ $? -ne 0 ] # Enquanto a saída do último comando não for igual a ZERO (return =! 0)
 	do
-		package_path_tmp2=$(get_folder_paths "$1");
+		package_path_tmp2=$(get_folder_paths "$1"); # Cria uma string no formato "/pasta/entrada|/pasta/saida|"
 			verifyReturnCode;
 		if [ "$?" != "1" ] # Se o usuário não quer sair do programa
 		then
@@ -83,11 +89,14 @@ define_deb_IO_folder_paths()
 			package_path_tmp2=""; # "Desaloca" variável bash
 			generateReturnCode $returnCode; ### Aqui não pode ser usado o "return" diretamente porque iria finalizar o loop "while"
 		else # $? == 1
-			false;
+			false; # Faz o "while" ter mais 1 iteração
 		fi
 	done
 }
 
+# Função que abre uma janela na interface gráfica para o usuário selecionar a pasta desejada para criar o pacote deb e a pasta aonde colocar o pacote deb criado.
+# Parâmetros:
+# 	$* - Caminho da pasta inicial do usuário comum (não root - $HOME)
 get_folder_paths()
 {
 	if [ -z $* ] # se nenhum parâmetro foi passado para o programa, no caso, "$HOME" do /usr/bin/quick-deb-builder
@@ -103,6 +112,9 @@ get_folder_paths()
 	return $returnCode;
 }
 
+# Função que verifica a validade da pasta escolhida pelo usuário para a criação do pacote deb.
+# Parâmetros:
+# 	$1 - String de saída do "yad", que contém o caminho da pasta de origem e destino do pacote deb (no formato /pasta/entrada|/pasta/saida|")
 validate_deb_package()
 {
 	format_folder_paths "$1";
@@ -115,6 +127,11 @@ validate_deb_package()
 	fi
 }
 
+# Função que processa a string de saída do "yad" (no formato /pasta/entrada|/pasta/saida|") em um array de strings.
+# Parâmetros:
+# 	$1 - String de saída do "yad", que contém o caminho da pasta de origem e destino do pacote deb (no formato /pasta/entrada|/pasta/saida|")
+# Saída:
+# 	${PACKAGE_PATHS[*]} - Array de strings com o caminho da pasta de origem e destino do pacote deb
 format_folder_paths()
 {
 	old_IFS=$IFS;
@@ -124,9 +141,26 @@ format_folder_paths()
 	#echo "Depois: ${PACKAGE_PATHS[0]} ${PACKAGE_PATHS[1]}";
 }
 
-dcreate() # Procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas
+# Função que inicia o procedimento de criação do pacote deb com resolução de problemas de permissão de arquivos e pastas. O progresso é mostrado em um janela gráfica com barra de progresso.
+create_deb_package()
 {
-	NUM_STEPS=19; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
+	dcreate | 
+	yad --progress \
+	--center --auto-close --no-buttons --on-top \
+	--title="$APP_NAME" \
+	--text="Building deb package..." \
+	--width=420 --borders=5; #--percentage=0
+	return $PIPESTATUS; # retorna o EXIT CODE do dcreate
+}
+
+# Procedimento que cria pacotes deb. Função mais importante de todo o aplicativo.
+# Arquivos criados:
+# 	'/tmp/quick-deb-builder.log' - Arquivo temporário de log do programa. Todo erro durante o procedimento tem sua mensagem (stderr) redirecionada para esse arquivo;
+# 	Um arquivo '*.deb', na pasta informada pelo usuário anteriormente;
+# 	'/tmp/quick-deb-builder.file' - Arquivo temporário que armazena o caminho do pacote deb criado pelo "dpkg-deb" (por causa que esta função sempre é executada em "subshell", as variáveis globais criadas nela não são acessíveis para o seu "supershell").
+dcreate()
+{
+	NUM_STEPS=20; # INFORME o NÚMERO de passos que o script executará para o indicador da barra de progresso
 	# * "2>>/tmp/quick-deb-builder.log": Escreve a saída de erro (stderr) do comando para um arquivo de log
 
 	# Passo 1: Copiando pasta para empacotamento para a pasta temporária (/tmp/)
@@ -134,27 +168,27 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	generateProgressNum; # Porcentagem de progresso na janela
 	echo "# Copying files to the temporary folder"; # Texto da janela (começa com '# ')
 	2>>/tmp/quick-deb-builder.log cp -R "${PACKAGE_PATHS[0]}" /tmp/deb_packaging; # Copia a pasta do pacote para a pasta temporária
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 
 	# Passo 2: Listando todos os arquivos na pasta
 	generateProgressNum; # Porcentagem de progresso na janela
 	echo "# Listing all files"; # Texto da janela (começa com '# ')
 	list_all_files; # cria a variável do tipo "array": "${ALL_FILES[*]}"
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 
 	# Passo 3: Verificando existência de arquivos executáveis (mimetype "aplication/...") na pasta
 
 	generateProgressNum;
 	echo "# Checking existence of executable files in the folder";
 	list_executable_files; # cria a variável do tipo "array": "${EXECUTABLE_FILES[*]}"
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 
 	# Passo 4: Verificando existência de arquivos não-executáveis (mimetype != "aplication/...") na pasta
 
 	generateProgressNum;
 	echo "# Checking existence of non-executable files in the folder";
 	list_non_executable_files; # cria a variável do tipo "array": "${NON_EXECUTABLE_FILES[*]}"
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 
 	# Passo 5: Modificando as permissões de arquivos executáveis
 
@@ -163,7 +197,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	if [ -n "$EXECUTABLE_FILES" ] # Se a variável "EXECUTABLE_FILES" NÃO é nula
 	then
 		echo "${EXECUTABLE_FILES[*]}" | xargs chmod 0755 2>>/tmp/quick-deb-builder.log; # Dá permissões rwxr-xr-x para todos os arquivos executáveis
-			verify_installation_process_sucess;
+			verify_deb_creating_process_sucess;
 	fi
 
 	# Passo 6: Modificando as permissões de arquivos não executáveis
@@ -173,7 +207,7 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	if [ -n "$NON_EXECUTABLE_FILES" ] # Se a variável "NON_EXECUTABLE_FILES" NÃO é nula
 	then
 		echo "${NON_EXECUTABLE_FILES[*]}" | xargs chmod 0644 2>>/tmp/quick-deb-builder.log; # Dá permissões rw-r--r-- para todos os arquivos não-executáveis # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
-			verify_installation_process_sucess;
+			verify_deb_creating_process_sucess;
 	fi
 
 	#### Os 6 próximos passos não precisam de gerar log, são comandos de busca por arquivos não obrigatórios no pacote:
@@ -201,25 +235,31 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 	echo "# Verifying and modifying permissions of man files in the folder";
 	2>/dev/null find /tmp/deb_packaging/usr/share/man/ -type f | xargs chmod 644 2>/dev/null; # Retira permissões de execução (x) para todos os arquivos relacionados à manuais de usuário (man files)
 
+	# Passo 11: Verificando e modificando as permissões de arquivos com mimetype "text/x-python" (arquivo executável Python sem permissão de execução)
+
+	generateProgressNum;
+	echo "# Verifying and modifying permissions of Python files";
+	2>/dev/null echo "`find /tmp/deb_packaging -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^text\/x-python/) print $1 }'`" | xargs chmod 755 2>/dev/null; # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta pra variável local
+
 	# Passo 11: Verificando e modificando as permissões dos arquivos .xml
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .xml files";
 	chmod_all_by_extension xml -x; # Retira permissões de execução (x) para todos os arquivos ".xml"
 
-	# Passo 12: Verificando e modificando as permissões dos arquivos .html
+	# Passo 13: Verificando e modificando as permissões dos arquivos .html
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .html files";
 	chmod_all_by_extension html -x; # Retira permissões de execução (x) para todos os arquivos ".html"
 
-	# Passo 13: Verificando e modificando as permissões dos arquivos .desktop
+	# Passo 14: Verificando e modificando as permissões dos arquivos .desktop
 
 	generateProgressNum;
 	echo "# Verifying and modifying permissions of .desktop files";
 	chmod_all_by_extension desktop -x; # Retira permissões de execução (x) para todos os arquivos ".desktop" (lançadores de aplicativos)
 
-	# Passo 14: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
+	# Passo 15: Colocando permissões de executável (+x) para arquivos executáveis nas pastas "(...)/bin"
 
 	generateProgressNum;
 	echo "# Modifying permissions of files in 'bin' folders";
@@ -227,57 +267,47 @@ dcreate() # Procedimento de criação do pacote deb com resolução de problemas
 
 	#### FIM DA BUSCA ####
 
-	# Passo 15: Modificando as permissões do diretório de controle do pacote deb
+	# Passo 16: Modificando as permissões do diretório de controle do pacote deb
 
 	generateProgressNum;
 	echo "# Modifying permissions of the files in DEBIAN directory";
 	2>>/tmp/quick-deb-builder.log chmod -R 0755 /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"; # Dá permissões rwxr-xr-x para pasta debian # xargs: "saída padrão" de um comando são os "argumentos" do outro comando
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 
-	# Passo 16: Criar arquivo md5sums
+	# Passo 17: Criar arquivo md5sums
 	generateProgressNum;
 	echo "# Creating md5sums file";
 	2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -print0 | 2>>/tmp/quick-deb-builder.log xargs -0 md5sum > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Cria o arquivo md5sums
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 	local md5sums_file=$(cat /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums); # Abre o arquivo "md5sums" para uma variável local
 	echo "${md5sums_file//\/tmp\/deb_packaging\//}" > /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Retira os "/tmp/deb_packaging" do "md5sums"
 	2>/dev/null chmod 0644 /tmp/deb_packaging/"$DEBIAN_FOLDER_ALIAS"/md5sums; # Dá permissões rw-r--r-- para o arquivo "md5sums" na pasta "DEBIAN"
 
-	# Passo 17: Empacotando arquivos
+	# Passo 18: Empacotando arquivos
 
 	generateProgressNum;
 	echo "# Packaging files";
 	DPKG_DEB_OUTPUT=$(2>>/tmp/quick-deb-builder.log dpkg-deb -b /tmp/deb_packaging "${PACKAGE_PATHS[1]}"); # sudo / o arquivo .deb vai estar com o "root" como proprietário do arquivo
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 
-	# Passo 18: Mudando proprietário do arquivo .deb de "root" para usuário atual
+	# Passo 19: Mudando proprietário do arquivo .deb de "root" para usuário atual
 
 	generateProgressNum;
 	echo "# Changing owner of the .deb file";
 	DEB_PACKAGE_CREATED_NAME=$(echo ${DPKG_DEB_OUTPUT//\'/\"} | cut -d'"' -f4);
 	1>/tmp/quick-deb-builder.file echo "$DEB_PACKAGE_CREATED_NAME"; # quick-deb-builder.file armazena o caminho do arquivo .deb criado (para uso na função "dialog_deb_creation_sucess") # Isso foi necessário porque esta função é executada em subshell - as variáveis criadas aqui não são visíveis para seu "supershell"
 	2>>/tmp/quick-deb-builder.log chown "$CURRENT_USER": "$DEB_PACKAGE_CREATED_NAME"; # Imprime a saída do dpkg-deb trocando aspas simples ('') por aspas duplas ("") | Corta o texto para pegar apenas o caminho do .deb | Adiciona barra invertida (\) onde tiver espaço ( ) | muda o proprietário do arquivo
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 
-	# Passo 19: Removendo arquivos temporários
+	# Passo 20: Removendo arquivos temporários
 
 	generateProgressNum;
 	echo "# Removing temporary files";
 	2>>/tmp/quick-deb-builder.log rm -R /tmp/deb_packaging; # exclui pasta temporária
-		verify_installation_process_sucess;
+		verify_deb_creating_process_sucess;
 }
 
-create_deb_package()
-{
-	dcreate | 
-	yad --progress \
-	--center --auto-close --no-buttons --on-top \
-	--title="$APP_NAME" \
-	--text="Building deb package..." \
-	--width=420 --borders=5; #--percentage=0
-	return $PIPESTATUS; # retorna o EXIT CODE do dcreate
-}
-
+# Função que exibe uma janela em interface gráfica informando o sucesso do procedimento de criação do pacote deb.
 dialog_deb_creation_sucess()
 {
 	local DEB_PACKAGE_CREATED_NAME=$(cat /tmp/quick-deb-builder.file); # Lê o nome do arquivo .deb criado (armazenado em arquivo)
@@ -291,7 +321,12 @@ dialog_deb_creation_sucess()
 
 #### FUNÇÕES AUXILIARES DO QUICK-DEB-BUILDER ####
 
-generateProgressNum() # Função para gerar o número do progresso da instalação (de acordo com o número de passos informado)
+# Função que gera o número do progresso do procedimento de criação do pacote deb (de acordo com o número de passos informado)
+# Parâmetros:
+# 	$NUM_STEPS (variável GLOBAL) - o número total de passos do procedimento (100%)
+# Saída:
+# 	$CURRENT_STEP (variável GLOBAL) - o número do passo atual (em '%' - porcentagem)
+generateProgressNum()
 {
 	if [ -z "$CURRENT_STEP" ]
 	then
@@ -322,6 +357,11 @@ generateProgressNum() # Função para gerar o número do progresso da instalaç�
 	fi
 }
 
+# Função que faz o processamento das interações do usuário em relação ao fechamento do programa (botão "Cancel" ou botão padrão "X" das janelas).
+# Parâmetros:
+# 	$? - EXIT CODE do último comando executado ("yad")
+# Saída:
+# 	EXIT CODE apropriado para o momento (função "verifyReturnCode")
 process_return_cancel_button()
 {
 	local returnCode=$?;
@@ -336,6 +376,11 @@ process_return_cancel_button()
 	fi
 }
 
+# Função que faz o processamento de todas as possibilidades para o usuário em relação à botões de confirmação.
+# Parâmetros:
+# 	$? - EXIT CODE do último comando executado ("yad")
+# Saída:
+# 	EXIT CODE apropriado para cada caso
 verifyReturnCode()
 {
 	local returnCode=$?;
@@ -356,7 +401,9 @@ verifyReturnCode()
 	fi
 }
 
-# Lista TODOS os arquivos da pasta "/tmp/deb_packaging" em um array de Strings: "${ALL_FILES[*]}"
+# Função que lista TODOS os arquivos da pasta '/tmp/deb_packaging'.
+# Saída:
+# 	${ALL_FILES[*]} (variável GLOBAL) - Array de strings com o caminho de todos os arquivos
 list_all_files()
 {
 	local all_files_tmp=$(2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f) # Lista todos os arquivos da pasta pra variável local
@@ -373,7 +420,9 @@ list_all_files()
 	done
 }
 
-# Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta "/tmp/deb_packaging" em um array de Strings: "${EXECUTABLE_FILES[*]}"
+# Função que lista todos os arquivos executáveis (mimetype "aplication/...") da pasta '/tmp/deb_packaging'.
+# Saída:
+# 	${EXECUTABLE_FILES[*]} (variável GLOBAL) - Array de strings com o caminho de todos os arquivos executáveis
 list_executable_files()
 {
 	local executable_files_tmp=$(2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f -exec mimetype {} + | awk -F': +' '{ if ($2 ~ /^application\//) print $1 }') # Lista todos os arquivos executáveis (mimetype "aplication/...") da pasta pra variável local
@@ -390,7 +439,9 @@ list_executable_files()
 	done
 }
 
-# Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta "/tmp/deb_packaging" em um array de Strings: "${NON_EXECUTABLE_FILES[*]}"
+# Função que lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta "/tmp/deb_packaging".
+# Saída:
+# 	${NON_EXECUTABLE_FILES[*]} (variável GLOBAL) - Array de strings com o caminho de todos os arquivos não executáveis
 list_non_executable_files()
 {
 	local non_executable_files_tmp=$(2>>/tmp/quick-deb-builder.log find /tmp/deb_packaging -type f -exec mimetype {} + | awk -F': +' '{ if ($2 !~ /^application\//) print $1 }') # Lista todos os arquivos não-executáveis (mimetype != "aplication/...") da pasta pra variável local
@@ -407,8 +458,13 @@ list_non_executable_files()
 	done
 }
 
-# Usage: chmod_all_by_extension [MODE] [EXTENSION]
-#        chmod_all_by_extension [OCTAL-MODE] [EXTENSION]
+# Função que modifica permissões de todos os arquivos de uma determinada extensão.
+# Parâmetros:
+# 	$1 - Extensão dos arquivos
+# 	$2 - Tipo de permissão desejada para os arquivos (modelo "chmod")
+# Uso:
+# 	chmod_all_by_extension [MODE] [EXTENSION]
+# 	chmod_all_by_extension [OCTAL-MODE] [EXTENSION]
 chmod_all_by_extension()
 {
 	local mode="$2";
@@ -416,7 +472,11 @@ chmod_all_by_extension()
 	2>/dev/null printf '%s\n' "${ALL_FILES[@]}" | grep ".$extension" | xargs chmod "$mode" 2>/dev/null; # (`printf '%s\n' "${ALL_FILES[@]}"` imprime cada um dos elementos do array em uma linha)
 }
 
-verify_installation_process_sucess()
+# Função que verifica o sucesso ou falha do comando executado no procedimento de criação do pacote deb.
+# Seria equivalente à uma Exception da linguagem Java. Ele exclui os arquivos temporários caso haja alguma falha.
+# Parâmetros:
+# 	$? - EXIT CODE do último comando executado
+verify_deb_creating_process_sucess()
 {
 	if [ "$?" != "0" ]
 	then
@@ -427,6 +487,12 @@ verify_installation_process_sucess()
 	fi
 }
 
+# Função que verifica a validade do conteúdo da pasta escolhida pelo usuário à procura dos itens essenciais e obrigatórios 
+# para a criação do pacote deb (pasta "DEBIAN" e arquivo "control").
+# Parâmetros:
+# 	${PACKAGE_PATHS[*]} - Array de strings com o caminho da pasta de origem e destino do pacote deb (será usada apenas o índice 0 na função - origem)
+# Saída:
+# 	Um "boolean" - "0" = É um pacote deb válido, "1" = Não é um pacote deb válido
 verify_deb_structure()
 {
 	if find "${PACKAGE_PATHS[0]}/DEBIAN" > /dev/null
@@ -456,25 +522,38 @@ verify_deb_structure()
 	fi
 }
 
+# Função que exibe uma janela em interface gráfica informando que a pasta escolhida pelo usuário é inválida.
+# Parâmetros:
+# 	$APP_NAME (variável GLOBAL) - o nome do aplicativo.
 dialog_invalid_folder()
 {
 	yad --title "$APP_NAME" --error --center --width=350 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>Invalid folder, try again.</b></big>" --text-align=center --button="OK:0";
 }
 
+# Função que exibe uma janela em interface gráfica informando que um erro ocorreu durante o procedimento de criação de pacotes deb.
+# Parâmetros:
+# 	$APP_NAME (variável GLOBAL) - o nome do aplicativo.
 dialog_deb_creation_error()
 {
 	cat /tmp/quick-deb-builder.log | yad --title "$APP_NAME" --text-info --center --width=500 --image="error" --window-icon="package" --icon-name="package" --text "<big><b>An unexpected error occured in creating .deb package.</b></big>\n\nLog of the error:" --button="OK:0";
 	remove_temp_files;
 }
 
+# Função que remove os arquivos de log temporários criados durante o procedimento de criação de pacotes deb.
+# Ele NÃO remove a pasta temporária "deb_packaging".
 remove_temp_files()
 {
 	rm -f /tmp/quick-deb-builder.log /tmp/quick-deb-builder.file; # remove arquivos temporários
 }
 
+# Função que gera um RETURN CODE para a função chamada.
+# Parâmetros:
+# 	$1 - o número do RETURN CODE desejado para gerar.
 generateReturnCode()
 {
 	return $1;
 }
+
+#### MAIN ####
 
 init $@; # Repassa os parâmetros de linha de comando para a função
