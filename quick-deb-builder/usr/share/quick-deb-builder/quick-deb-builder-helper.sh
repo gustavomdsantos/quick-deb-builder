@@ -15,7 +15,7 @@
 
 APP_NAME="Quick DEB Builder"
 CMD_NAME="quick-deb-builder"
-VERSION="1.1.2-nightly"
+VERSION="1.1.2"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes"
 CONTACT_AUTHOR="http://about.me/gustavosotnas"
 APP_HOMEPAGE="https://github.com/gustavosotnas/quick-deb-builder"
