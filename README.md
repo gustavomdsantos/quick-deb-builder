@@ -12,7 +12,7 @@ Language
 
 English
 --------------------------
-**Quick DEB Builder** is a simple tool made in Bash that creates [*.deb*](http://en.wikipedia.org/wiki/Deb_%28file_format%29) packages from an [existing build tree](https://www.debian.org/releases/jessie/i386/apcs02.html.en) in a easy and quick way.
+**Quick DEB Builder** is a simple tool written in Bash that creates [*.deb*](http://en.wikipedia.org/wiki/Deb_%28file_format%29) packages from an [existing build tree](https://www.debian.org/releases/jessie/i386/apcs02.html.en) in a easy and quick way.
 
 Just enter a folder path that contains a valid "debian-like" directory structure and an output folder path that **Quick DEB Builder** creates the *.deb* package in the specified output folder.
 
