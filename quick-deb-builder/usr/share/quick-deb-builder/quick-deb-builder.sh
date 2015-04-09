@@ -6,14 +6,6 @@
 # License. See the file COPYING in the main directory of this archive
 # for more details.
 
-# Parâmetros OBRIGATÓRIOS que o '/usr/bin/quick-deb-builder' passa:
-# 	$1=$HOME - Caminho da pasta inicial do usuário comum (não root - $HOME)
-#	$2=$USER - Nome do usuário comum
-#	$3=$OPTION - Opções informativas do programa (--version, --help, -h)
-# OU
-#	$3=$INPUT_PATH - Pasta de origem (source do software) a ser criado o pacote deb
-#	$4=$OUTPUT_PATH - Pasta de destino do pacote deb
-
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
@@ -24,6 +16,13 @@ CURRENT_USER="$2" # $2 - Parâmetro que o "../bin/quick-deb-builder" sempre pass
 true=1; false=0; # boolean
 
 # Função que começa a execução do programa.
+# Parâmetros (que o '/usr/bin/quick-deb-builder' passa):
+# 	$1=$HOME - Caminho da pasta inicial do usuário comum (não root - $HOME)
+#	$2=$USER - Nome do usuário comum
+#	$3=$OPTION - Opções informativas do programa (--version, --help, -h)
+# OU
+#	$3=$INPUT_PATH - Pasta de origem (source do software) a ser criado o pacote deb
+#	$4=$OUTPUT_PATH - Pasta de destino do pacote deb
 init()
 {
 # Próximas 4 linhas: implementar na versão 1.2.0
@@ -43,6 +42,8 @@ init()
 }
 
 # Função principal do programa, em interface gráfica (GUI).
+# Parâmetros:
+# 	$1 - Caminho da pasta inicial do usuário comum (não root - $HOME)
 main_GUI()
 {
 	verify_GUI;
