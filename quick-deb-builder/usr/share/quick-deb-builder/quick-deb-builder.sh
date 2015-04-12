@@ -9,7 +9,7 @@
 #set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 APP_NAME="Quick DEB Builder"
-VERSION="1.1.2"
+VERSION="1.1.3"
 APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2" # $2 - Parâmetro que o "../bin/quick-deb-builder" sempre passa para este (executado como root a variável "$USER" == "root")
@@ -492,15 +492,15 @@ verify_deb_creating_process_sucess()
 # para a criação do pacote deb (pasta "DEBIAN" e arquivo "control").
 # Parâmetros:
 # 	${PACKAGE_PATHS[*]} - Array de strings com o caminho da pasta de origem e destino do pacote deb (será usada apenas o índice 0 na função - origem)
-# Saída:
+# Retorna:
 # 	Um "boolean" - "0" = É um pacote deb válido, "1" = Não é um pacote deb válido
 verify_deb_structure()
 {
-	if find "${PACKAGE_PATHS[0]}/DEBIAN" > /dev/null
+	if find "${PACKAGE_PATHS[0]}/DEBIAN" &> /dev/null # "&>" manda tanto o stdout quanto o stderr para o "Buraco Negro"
 	then # O nome da pasta de controle do pacote é "DEBIAN" (maiúsculas)
 		DEBIAN_FOLDER_ALIAS="DEBIAN"; # Define variável local com o nome da pasta (será usada nos próximos passos para evitar fazer várias estruturas condicionais)
 		local ISTHERE_DEBIAN_FOLDER=$true; # A pasta DEBIAN existe!
-	elif find "${PACKAGE_PATHS[0]}/debian" > /dev/null
+	elif find "${PACKAGE_PATHS[0]}/debian" &> /dev/null
 	then # O nome da pasta de controle do pacote é "DEBIAN" (minúsculas)
 		DEBIAN_FOLDER_ALIAS="debian"; # Define variável local com o nome da pasta (será usada nos próximos passos para evitar fazer várias estruturas condicionais)
 		local ISTHERE_DEBIAN_FOLDER=$true; # A pasta DEBIAN existe!
@@ -508,14 +508,14 @@ verify_deb_structure()
 		local ISTHERE_DEBIAN_FOLDER=$false; # A pasta DEBIAN NÃO existe!
 	fi
 
-	if find "${PACKAGE_PATHS[0]}/DEBIAN/control" > /dev/null || find "${PACKAGE_PATHS[0]}/debian/control" > /dev/null
+	if find "${PACKAGE_PATHS[0]}/$DEBIAN_FOLDER_ALIAS/control" &> /dev/null
 	then
 		local ISTHERE_CONTROL_FILE=$true; # O arquivo de controle existe!
 	else
 		local ISTHERE_CONTROL_FILE=$false; # O arquivo de controle NÃO existe
 	fi
 
-	if [ $ISTHERE_DEBIAN_FOLDER ] && [ $ISTHERE_CONTROL_FILE ] # Existe a pasta "DEBIAN"? Existe o arquivo de controle?
+	if [ "$ISTHERE_DEBIAN_FOLDER" == "$true" ] && [ "$ISTHERE_CONTROL_FILE" == "$true" ] # Existe a pasta "DEBIAN"? Existe o arquivo de controle?
 	then
 		return 0; # É um pacote deb válido
 	else
