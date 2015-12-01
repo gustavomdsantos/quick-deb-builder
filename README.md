@@ -1,14 +1,11 @@
+[**English**](#english) | [**Português**](#português)
 ![Quick DEB Builder](http://icons.iconarchive.com/icons/alecive/flatwoken/48/Apps-Package-Debian-icon.png) Quick DEB Builder
 ============================================================================================================================
 
 [![Stories in Backlog](https://img.shields.io/github/issues-raw/gustavosotnas/quick-deb-builder.svg?label=backlog&style=plastic)](https://waffle.io/gustavosotnas/quick-deb-builder)
 [![Stories in Ready](https://badge.waffle.io/gustavosotnas/quick-deb-builder.png?label=ready&title=ready)](https://waffle.io/gustavosotnas/quick-deb-builder)
+[![GitHub license](https://img.shields.io/github/license/gustavosotnas/quick-deb-builder.svg?style=plastic)](https://github.com/gustavosotnas/quick-deb-builder/blob/master/COPYING)
 [![GitHub release](https://img.shields.io/github/release/gustavosotnas/quick-deb-builder.svg?style=plastic)](https://github.com/gustavosotnas/quick-deb-builder/releases/latest)
-
-Language
--------
-1. [**English**](#english)
-2. [**Português**](#português)
 
 English
 --------------------------
@@ -24,7 +21,7 @@ It automatically solves most common permission problems for files and directorie
 ### Download and installation
 **Quick DEB Builder** is available as an installable *.deb* package for Debian-based systems (*Ubuntu, Mint, Elementary OS, Deepin, Kali, Tails,* etc.)
 
-To download the *.deb* package, go to [***releases***](https://github.com/gustavosotnas/terminal-initializer/releases/latest) section and download the latest version of it. Install with [**GDebi Package Installer**](https://apps.ubuntu.com/cat/applications/gdebi/) or enter the following command in a Terminal (in the folder where is the downloaded file):
+To download the *.deb* package, go to [***releases***](https://github.com/gustavosotnas/quick-deb-builder/releases/latest) section and download the latest version of it. Install with a **package installer** like [GDebi](https://apps.ubuntu.com/cat/applications/gdebi) or enter the following command in a Terminal (in the folder where is the downloaded file):
 
 `sudo dpkg -i quick-deb-builder_ver.si.on_all.deb` <br>
 (replace `ver.si.on` with the downloaded application version number)
@@ -59,7 +56,7 @@ Ele resolve automaticamente os problemas mais comuns de permissão para arquivos
 ### Download e instalação
 **Quick DEB Builder** está disponível como um pacote *.deb* instalável para sistemas baseados no ***Debian*** (*Ubuntu, Mint, Elementary OS, Deepin, Kali, Tails,* etc.).
 
-Para baixar o pacote *.deb*, vá para a seção [***releases***](https://github.com/gustavosotnas/quick-deb-builder/releases/latest) e baixe a última versão do mesmo. Instale com o [**GDebi Package Installer**](https://apps.ubuntu.com/cat/applications/gdebi/) ou digite o seguinte comando em um Terminal (na pasta onde está o arquivo baixado):
+Para baixar o pacote *.deb*, vá para a seção [***releases***](https://github.com/gustavosotnas/quick-deb-builder/releases/latest) e baixe a última versão do mesmo. Instale com um **instalador de pacotes** como [GDebi](https://apps.ubuntu.com/cat/applications/gdebi/) ou digite o seguinte comando em um Terminal (na pasta onde está o arquivo baixado):
 
 `sudo dpkg -i quick-deb-builder_ver.si.on_all.deb` <br>
 (substitua `ver.si.on` pelo número da versão do aplicativo baixada)
