@@ -1,5 +1,5 @@
 Package: quick-deb-builder
-Version: 1.1.3
+Version: 1.2.0
 Section: devel
 Maintainer: Gustavo Moraes <gustavosotnas1@gmail.com>
 Homepage: https://github.com/gustavosotnas/quick-deb-builder
