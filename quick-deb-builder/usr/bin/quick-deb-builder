@@ -1,11 +1,11 @@
 #! /bin/bash
 
-# Author: Gustavo Moraes <gustavosotnas@gmail.com>
+# Author: Gustavo Moraes <gustavosotnas1@gmail.com>
 #
 # This file is subject to the terms and conditions of the GNU General Public
 # License. See the file COPYING in the main directory of this archive
 # for more details.
-#
+
 # OBS.: Os símbolos ": '" e "'" são caracteres para comentários multilinha (destacados)
 # Uso (Parâmetros OPCIONAIS que o usuário pode passar para o "../share/quick-deb-builder/quick-deb-builder.sh"):
 : '	quick-deb-builder'
@@ -17,4 +17,5 @@ set -u; # Bash will exit the script if you try to use an uninitialised variable
 
 DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) # Pega o diretório no qual o script está localizado (default: "/usr/bin")
 cd "$DIR"/../share/quick-deb-builder
-sudo ./quick-deb-builder.sh "$HOME" "$USER" "$@" # quick-deb-builder.sh (String home, String user, String options) # Como a pasta sudoers.d está modificada, o sudo não irá perguntar senha
+sudo ./quick-deb-builder.sh "$HOME" "$USER" "$@" # quick-deb-builder.sh (String home, String user, String options)
+# OBSERVAÇÃO: Como a pasta sudoers.d tem uma entrada do quick-deb-builder.sh, o sudo não irá perguntar senha
