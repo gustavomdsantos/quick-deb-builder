@@ -76,3 +76,5 @@ Encontrou um bug? Quer sugerir uma nova funcionalidade ou melhoria? Informe-nos 
 
 ### Pull Request
 Contribuidores são bem vindos! [Issues - gustavosotnas/quick-deb-builder](https://github.com/gustavosotnas/quick-deb-builder/issues)
+
+
