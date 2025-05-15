@@ -1,8 +1,8 @@
 Package: quick-deb-builder
-Version: 1.2.0
+Version: 1.2.1
 Section: devel
-Maintainer: Gustavo Moraes <gustavosotnas1@gmail.com>
-Homepage: https://github.com/gustavosotnas/quick-deb-builder
+Maintainer: Gustavo Moraes <gustavomdsantos@pm.me>
+Homepage: https://github.com/gustavomdsantos/quick-deb-builder
 Installed-Size: 51
 Priority: optional
 Architecture: all
