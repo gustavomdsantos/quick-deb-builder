@@ -4,7 +4,6 @@
 ============================================================================================================================
 
 [![Stories in Backlog](https://img.shields.io/github/issues-raw/gustavosotnas/quick-deb-builder.svg?label=backlog&style=plastic)](https://waffle.io/gustavosotnas/quick-deb-builder)
-[![Stories in Ready](https://badge.waffle.io/gustavosotnas/quick-deb-builder.png?label=ready&title=ready)](https://waffle.io/gustavosotnas/quick-deb-builder)
 [![GitHub license](https://img.shields.io/github/license/gustavosotnas/quick-deb-builder.svg?style=plastic)](https://github.com/gustavosotnas/quick-deb-builder/blob/master/COPYING)
 [![GitHub release](https://img.shields.io/github/release/gustavosotnas/quick-deb-builder.svg?style=plastic)](https://github.com/gustavosotnas/quick-deb-builder/releases/latest)
 
@@ -30,15 +29,11 @@ To download the *.deb* package, go to [***releases***](https://github.com/gustav
 #### Dependencies
  * [**yad**](http://www.webupd8.org/2010/12/yad-zenity-on-steroids-display.html), which must be installed to the application work correctly.
 
-<!--[**GDebi**](https://apps.ubuntu.com/cat/applications/gdebi/) installs [**yad**](http://www.webupd8.org/2010/12/yad-zenity-on-steroids-display.html) if it doesn't installed.-->
-
-Soon **Quick DEB Builder** will be available in a PPA repository with a copy of [**yad**](http://www.webupd8.org/2010/12/yad-zenity-on-steroids-display.html), in order to facilitate the installation of this dependence.
-
 ### Bug tracker
 Found a bug? Want to suggest a new feature or improvement? Let us know [here](https://github.com/gustavosotnas/quick-deb-builder/issues) on GitHub!
 
 ### Author
- * Gustavo Moraes - <gustavosotnas1@gmail.com>
+ * Gustavo Moraes - <gustavomdsantos@pm.me>
 
 ### Pull Request
 Contributors are welcome! [Issues - gustavosotnas/quick-deb-builder](https://github.com/gustavosotnas/quick-deb-builder/issues)
@@ -65,15 +60,11 @@ Para baixar o pacote *.deb*, vá para a seção [***releases***](https://github.
 #### Dependências
  * [**yad**](http://www.webupd8.org/2010/12/yad-zenity-on-steroids-display.html), que deve estar instalado para o aplicativo funcionar corretamente.
 
-<!--[**GDebi**](https://apps.ubuntu.com/cat/applications/gdebi/) instala [**yad**](http://www.webupd8.org/2010/12/yad-zenity-on-steroids-display.html) se ele não estiver instalado.-->
-
-Em breve **Quick DEB Builder** estará disponível em um repositório PPA com uma cópia do [**yad**](http://www.webupd8.org/2010/12/yad-zenity-on-steroids-display.html), a fim de facilitar a instalação desta dependência.
-
 ### Bug tracker
 Encontrou um bug? Quer sugerir uma nova funcionalidade ou melhoria? Informe-nos [aqui](https://github.com/gustavosotnas/quick-deb-builder/issues) no GitHub!
 
 ### Autor
- * Gustavo Moraes - <gustavosotnas1@gmail.com>
+ * Gustavo Moraes - <gustavomdsantos@pm.me>
 
 ### Pull Request
 Contribuidores são bem vindos! [Issues - gustavosotnas/quick-deb-builder](https://github.com/gustavosotnas/quick-deb-builder/issues)
