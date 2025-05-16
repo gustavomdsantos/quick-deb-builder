@@ -10,7 +10,7 @@
 
 APP_NAME="Quick DEB Builder"
 VERSION="$(./quick-deb-builder-get-version.sh)"
-APP_AUTHOR="Copyright (C) 2015-2025 Gustavo Moraes https://github.com/gustavomsantos"
+APP_AUTHOR="Copyright (C) 2015-2025 Gustavo Moraes https://github.com/gustavomdsantos"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2" # $2 - Parâmetro que o "../bin/quick-deb-builder" sempre passa para este (executado como root a variável "$USER" == "root")
 true=1; false=0; # boolean
