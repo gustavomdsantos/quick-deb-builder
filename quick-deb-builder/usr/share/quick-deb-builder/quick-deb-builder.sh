@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Author: Gustavo Moraes <gustavosotnas1@gmail.com>
+# Author: Gustavo Moraes <gustavomdsantos@pm.me>
 #
 # This file is subject to the terms and conditions of the GNU General Public
 # License. See the file COPYING in the main directory of this archive
@@ -10,7 +10,7 @@
 
 APP_NAME="Quick DEB Builder"
 VERSION="$(./quick-deb-builder-get-version.sh)"
-APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes http://about.me/gustavosotnas"
+APP_AUTHOR="Copyright (C) 2015-2025 Gustavo Moraes https://github.com/gustavomsantos"
 HELP_DESCRIPTION_TEXT="Select a folder path with a \"debian-like\" directory structure and an output folder path and press OK below:"
 CURRENT_USER="$2" # $2 - Parâmetro que o "../bin/quick-deb-builder" sempre passa para este (executado como root a variável "$USER" == "root")
 true=1; false=0; # boolean
