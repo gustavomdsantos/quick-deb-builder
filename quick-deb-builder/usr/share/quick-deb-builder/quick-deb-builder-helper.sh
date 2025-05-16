@@ -16,7 +16,7 @@
 APP_NAME="Quick DEB Builder"
 CMD_NAME="quick-deb-builder"
 VERSION="$(./quick-deb-builder-get-version.sh)"
-APP_AUTHOR="Copyright (C) 2015 Gustavo Moraes"
+APP_AUTHOR="Copyright (C) 2015-2025 Gustavo Moraes"
 CONTACT_AUTHOR="http://about.me/gustavosotnas"
 APP_HOMEPAGE="https://github.com/gustavosotnas/quick-deb-builder"
 HELP_DESCRIPTION_TEXT_LINE1="$APP_NAME is a simple tool that quickly creates .deb packages"
