@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Author: Gustavo Moraes <gustavosotnas1@gmail.com>
+# Author: Gustavo Moraes <gustavomsantos@pm.me>
 #
 # This file is subject to the terms and conditions of the GNU General Public
 # License. See the file COPYING in the main directory of this archive
@@ -17,8 +17,8 @@ APP_NAME="Quick DEB Builder"
 CMD_NAME="quick-deb-builder"
 VERSION="$(./quick-deb-builder-get-version.sh)"
 APP_AUTHOR="Copyright (C) 2015-2025 Gustavo Moraes"
-CONTACT_AUTHOR="http://about.me/gustavosotnas"
-APP_HOMEPAGE="https://github.com/gustavosotnas/quick-deb-builder"
+CONTACT_AUTHOR="https://github.com/gustavomsantos"
+APP_HOMEPAGE="https://github.com/gustavomsantos/quick-deb-builder"
 HELP_DESCRIPTION_TEXT_LINE1="$APP_NAME is a simple tool that quickly creates .deb packages"
 HELP_DESCRIPTION_TEXT_LINE2="from an existing build tree. It automatically solves most common"
 HELP_DESCRIPTION_TEXT_LINE3="permission problems for files and directories in creating .deb packages."
